@@ -1,0 +1,22 @@
+# Temporary files
+.*.swp
+*.pyc
+*.pyo
+*.mo
+
+# Dev-related files
+dev/
+/static/
+/.tox/
+
+# Build-related files
+doc/_build/
+.coverage
+*.egg-info
+build/
+dist/
+htmlcov/
+MANIFEST
+
+# Settings
+local_settings.ini
