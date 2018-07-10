@@ -34,7 +34,7 @@ class Account(models.Model):
     additional_roles = models.IntegerField()
     xorg_id = DottedSlugField(unique=True, max_length=255)
     school_id = UnboundedCharField(blank=True)
-    entry_way = UnboundedCharField(blank=True) # TODO
+    admission_path = UnboundedCharField(blank=True)
     cursus_domain = UnboundedCharField(blank=True)
     cursus_name = UnboundedCharField(blank=True)
     current_corps = UnboundedCharField(blank=True)
@@ -80,4 +80,3 @@ class ProfessionnalInformation(models.Model):
     current = models.NullBooleanField()
     creator_of_company = models.NullBooleanField()
     buyer_of_company = models.NullBooleanField()
-
