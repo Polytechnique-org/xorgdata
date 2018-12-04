@@ -3,7 +3,10 @@
 # This code is distributed under the GPLv3 license.
 # Copyright (c) Polytechnique.org
 
-import os, re, codecs
+
+import codecs
+import os
+import re
 
 from setuptools import find_packages, setup
 
@@ -42,5 +45,18 @@ setup(
     ],
     setup_requires=[
         'setuptools>=0.8',
+    ],
+
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'License :: OSI Approved :: GNU Affero General Public License v3',
+        'Natural Language :: French',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Internet :: WWW/HTTP :: Session',
+        'Topic :: System :: Systems Administration :: Authentication/Directory'
     ],
 )

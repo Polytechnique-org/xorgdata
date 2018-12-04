@@ -1,0 +1,4 @@
+-e .
+
+check_manifest
+flake8
