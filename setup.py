@@ -30,7 +30,7 @@ setup(
     name=PACKAGE,
     version=get_version(PACKAGE),
     author="Polytechnique.org dev team",
-    author_email="devel+xorgauth@staff.polytechnique.org",
+    author_email="devel+xorgdata@staff.polytechnique.org",
     description="Polytechnique.org central datastore",
     license='AGPLv3',
     url='https://github.com/Polytechnique-org/%s' % PACKAGE,
