@@ -28,7 +28,6 @@ build: $(MO_FILES)
 createdb:
 	mkdir -p dev
 	python manage.py migrate
-	python manage.py creatersakey
 
 %.mo: %.po
 	cd $(abspath $(dir $<)/../../..) && $(DJANGO_ADMIN) compilemessages
