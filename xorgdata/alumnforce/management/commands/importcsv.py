@@ -2,11 +2,11 @@
 """Parse data from AlumnForce CSV exports, in order to import them"""
 
 import csv
+import datetime
 import os.path
 import re
 
 from django.core.management.base import BaseCommand, CommandError
-from django.utils.dateparse import parse_date
 
 from xorgdata.alumnforce import models
 
@@ -23,6 +23,18 @@ def int_or_none(txt):
         return None
     else:
         return int(txt)
+
+
+FRENCH_DATE_RE = re.compile(r'(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})$')
+
+
+def parse_date(value):
+    # Copy from django.utils.dateparse which supports dates in French format
+    match = FRENCH_DATE_RE.match(value)
+    if match:
+        kw = {k: int(v) for k, v in match.groupdict().items()}
+        return datetime.date(**kw)
+    raise ValueError("Unknown date format (%r)" % value)
 
 
 # Mapping from CSV columns to database fields
@@ -70,7 +82,15 @@ ALUMNFORCE_USER_FIELDS = {
     'Inscription aux newsletters': ('newsletter_inscriptions', str),
     'URL de la photo de profil': ('profile_picture_url', str),
 }
-
+ALUMNFORCE_USERDEGREE_FIELDS = {
+    'Identifiant AF': ('af_id', int),
+    'Identifiant école': ('ax_id', str),
+    'Référence du diplôme': ('diploma_reference', str),
+    'A obtenu son diplôme ?': ('diplomed', bool_or_none),
+    'Date d\'obtention du diplôme': ('diplomation_date', parse_date),
+    'Mode de formation': ('domain', str),
+    'Cycle': ('name', str),
+}
 
 # Kind of export file
 KNOWN_EXPORT_KINDS = frozenset((
@@ -88,9 +108,9 @@ def get_export_kind_from_filename(file_path):
     Example of path: downloads/ftp/exportusers-afbo-Polytechnique-X-20190323.csv
     """
     file_name = os.path.basename(file_path)
-    matches = re.match(r'^export([a-z]+)-afbo[^.]*.csv$', file_name)
-    if matches is not None:
-        kind = matches.group(1)
+    match = re.match(r'^export([a-z]+)-afbo[^.]*.csv$', file_name)
+    if match:
+        kind = match.group(1)
         if kind not in KNOWN_EXPORT_KINDS:
             raise ValueError("unknown export kind %r" % kind)
         return kind
@@ -156,7 +176,17 @@ class Command(BaseCommand):
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from users %r" % file_path))
             elif file_kind == "userdegrees":
-                pass
+                for value in load_csv(file_path, ALUMNFORCE_USERDEGREE_FIELDS):
+                    try:
+                        account = models.Account.objects.get(af_id=value['af_id'])
+                    except models.Account.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(
+                            "Unable to find user with AF ID %d (AX ID %r)" % (value['af_id'], value['ax_id'])))
+                    else:
+                        del value['af_id']
+                        del value['ax_id']
+                        models.AcademicInformation.objects.update_or_create(account=account, defaults=value)
+                self.stdout.write(self.style.SUCCESS("Loaded values from user degrees %r" % file_path))
             elif file_kind == "userjobs":
                 pass
             elif file_kind == "groups":
