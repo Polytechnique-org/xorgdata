@@ -30,6 +30,8 @@ FRENCH_DATE_RE = re.compile(r'(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4}
 
 def parse_date(value):
     # Copy from django.utils.dateparse which supports dates in French format
+    if not value:
+        return None
     match = FRENCH_DATE_RE.match(value)
     if match:
         kw = {k: int(v) for k, v in match.groupdict().items()}
@@ -90,6 +92,32 @@ ALUMNFORCE_USERDEGREE_FIELDS = {
     'Date d\'obtention du diplôme': ('diplomation_date', parse_date),
     'Mode de formation': ('domain', str),
     'Cycle': ('name', str),
+}
+ALUMNFORCE_USERJOB_FIELDS = {
+    'Identifiant AF': ('af_id', int),
+    'Identifiant école': ('ax_id', str),
+    'Titre du poste': ('title', str),
+    'Fonction dans l\'entreprise': ('role', str),
+    'Nom de l\'entreprise': ('company_name', str),
+    'Adresse professionnelle - Ligne 1': ('address_1', str),
+    'Adresse professionnelle - Ligne 2': ('address_2', str),
+    'Adresse professionnelle - Ligne 3': ('address_3', str),
+    'Adresse professionnelle - Ligne 4': ('address_4', str),
+    'Adresse professionnelle - Code postal': ('address_postcode', str),
+    'Adresse professionnelle - Ville': ('address_city', str),
+    'Adresse professionnelle - Pays': ('address_country', str),
+    'Indicateur téléphone fixe professionnel': ('phone_indicator', int_or_none),
+    'Téléphone fixe professionnel': ('phone_number', str),
+    'Indicateur téléphone mobile professionnel': ('mobile_phone_indicator', int_or_none),
+    'Téléphone mobile professionnel': ('mobile_phone_number', str),
+    'Fax professionnel': ('fax', str),
+    'Email professionnel': ('email', str),
+    'Date de début de l\'expérience': ('start_date', parse_date),
+    'Date de fin de l\'expérience': ('end_date', parse_date),
+    'Type de contrat': ('contract_kind', str),
+    'Poste actuel ?': ('current', bool_or_none),
+    'J\'ai créé cette entreprise ?': ('creator_of_company', bool_or_none),
+    'J\'ai repris cette entreprise ?': ('buyer_of_company', bool_or_none),
 }
 
 # Kind of export file
@@ -188,7 +216,17 @@ class Command(BaseCommand):
                         models.AcademicInformation.objects.update_or_create(account=account, defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from user degrees %r" % file_path))
             elif file_kind == "userjobs":
-                pass
+                for value in load_csv(file_path, ALUMNFORCE_USERJOB_FIELDS):
+                    try:
+                        account = models.Account.objects.get(af_id=value['af_id'])
+                    except models.Account.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(
+                            "Unable to find user with AF ID %d (AX ID %r)" % (value['af_id'], value['ax_id'])))
+                    else:
+                        del value['af_id']
+                        del value['ax_id']
+                        models.ProfessionnalInformation.objects.update_or_create(account=account, defaults=value)
+                self.stdout.write(self.style.SUCCESS("Loaded values from user jobs %r" % file_path))
             elif file_kind == "groups":
                 pass
             elif file_kind == "groupmembers":
