@@ -2,11 +2,14 @@
 """Parse data from AlumnForce CSV exports, in order to import them"""
 
 import csv
+import os.path
+import re
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.dateparse import parse_date
 
 from xorgdata.alumnforce import models
+
 
 def bool_or_none(txt):
     if txt == '':
@@ -14,11 +17,13 @@ def bool_or_none(txt):
     else:
         return bool(int(txt))
 
+
 def int_or_none(txt):
     if txt == '':
         return None
     else:
         return int(txt)
+
 
 # Mapping from CSV columns to database fields
 ALUMNFORCE_USER_FIELDS = {
@@ -27,7 +32,7 @@ ALUMNFORCE_USER_FIELDS = {
     'Prénom': ('first_name', str),
     'Nom d\'état civil': ('last_name', str),
     'Nom d\'usage': ('common_name', str),
-    'Civilité' : ('civility', str),
+    'Civilité': ('civility', str),
     'Date de naissance': ('birthdate', parse_date),
     'Adresse personnelle - Ligne 1': ('address_1', str),
     'Adresse personnelle - Ligne 2': ('address_2', str),
@@ -67,6 +72,30 @@ ALUMNFORCE_USER_FIELDS = {
 }
 
 
+# Kind of export file
+KNOWN_EXPORT_KINDS = frozenset((
+    'groupmembers',
+    'groups',
+    'userdegrees',
+    'userjobs',
+    'users',
+))
+
+
+def get_export_kind_from_filename(file_path):
+    """Return the kind of a file from its path
+
+    Example of path: downloads/ftp/exportusers-afbo-Polytechnique-X-20190323.csv
+    """
+    file_name = os.path.basename(file_path)
+    matches = re.match(r'^export([a-z]+)-afbo[^.]*.csv$', file_name)
+    if matches is not None:
+        kind = matches.group(1)
+        if kind not in KNOWN_EXPORT_KINDS:
+            raise ValueError("unknown export kind %r" % kind)
+        return kind
+    return None
+
 
 def load_csv(csv_file_path, fields):
     with open(csv_file_path, 'r', encoding='utf-8') as csv_stream:
@@ -82,12 +111,14 @@ def load_csv(csv_file_path, fields):
                     convertions.append(fields.get(col_name, col_name)[1])
 
                 # Sanity check
-                assert len(set(header_row)) == len(header_row), "There are columns which are not unique in {}".format(csv_file_path)
+                assert len(set(header_row)) == len(header_row), \
+                    "There are columns which are not unique in {}".format(csv_file_path)
                 continue
 
-            assert len(row) == len(header_row), "The CSV line {} has a different length from the header".format(reader.line_num)
+            assert len(row) == len(header_row), \
+                "The CSV line {} has a different length from the header".format(reader.line_num)
             # convert the values as appropriate
-            row = [ conv(val) for (val, conv) in zip(row, convertions) ]
+            row = [conv(val) for (val, conv) in zip(row, convertions)]
             yield dict(zip(header_row, row))
 
 
@@ -95,21 +126,42 @@ class Command(BaseCommand):
     help = "Import a CSV file with accounts data into the database"
 
     def add_arguments(self, parser):
-        parser.add_argument('-k', '--kind', type=str,
-                            help="Kind of csv filed to load, in users,userdegrees,userjobs,groups,groupmembers")
+        parser.add_argument('-k', '--kind', type=str, choices=KNOWN_EXPORT_KINDS,
+                            help="Kind of csv filed to load")
         parser.add_argument('csvfile', nargs='+', type=str,
                             help="path to CSV file to load")
 
     def handle(self, *args, **options):
-        if options['kind'] == "users":
-            for file in options['csvfile']:
-                for value in load_csv(file, ALUMNFORCE_USER_FIELDS):
-                    models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
-        elif options['kind'] == "userdegrees":
-            pass
-        elif options['kind'] == "userjobs":
-            pass
-        elif options['kind'] == "groups":
-            pass
-        elif options['kind'] == "groupmembers":
-            pass
+        for file_path in options['csvfile']:
+            try:
+                file_kind = get_export_kind_from_filename(file_path)
+            except ValueError as exc:
+                # Forward the exception if there is no default value
+                if not options['kind']:
+                    raise CommandError(str(exc))
+                file_kind = None
+
+            if not file_kind:
+                if not options['kind']:
+                    raise CommandError(
+                        "Unable to find the kind of %r, use --kind option" % file_path)
+                file_kind = options['kind']
+            elif options['kind'] and file_kind != options['kind']:
+                raise CommandError(
+                    "Incompatible kind for file %r: %r != %r" % (
+                        file_path, file_kind, options['kind']))
+
+            if file_kind == "users":
+                for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
+                        models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
+                self.stdout.write(self.style.SUCCESS("Loaded values from users %r" % file_path))
+            elif file_kind == "userdegrees":
+                pass
+            elif file_kind == "userjobs":
+                pass
+            elif file_kind == "groups":
+                pass
+            elif file_kind == "groupmembers":
+                pass
+            else:
+                raise CommandError("Unknown kind %r" % file_kind)
