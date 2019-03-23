@@ -47,6 +47,7 @@ class Account(models.Model):
     mail_reception = UnboundedCharField(blank=True)
     newsletter_inscriptions = UnboundedCharField(blank=True)
     profile_picture_url = UnboundedCharField(blank=True)
+    last_update = models.DateField()
 
     def __str__(self):
         if self.ax_id:
@@ -62,6 +63,7 @@ class AcademicInformation(models.Model):
     cycle = UnboundedCharField(blank=True)
     domain = UnboundedCharField(blank=True)
     name = UnboundedCharField(blank=True)
+    last_update = models.DateField()
 
 
 class ProfessionnalInformation(models.Model):
@@ -88,6 +90,7 @@ class ProfessionnalInformation(models.Model):
     current = models.NullBooleanField()
     creator_of_company = models.NullBooleanField()
     buyer_of_company = models.NullBooleanField()
+    last_update = models.DateField()
 
 
 class Group(models.Model):
@@ -96,6 +99,7 @@ class Group(models.Model):
     url = UnboundedCharField(blank=True)
     name = UnboundedCharField(blank=True)
     category = UnboundedCharField(blank=True)
+    last_update = models.DateField()
 
     def __str__(self):
         return "%s (AF ID %s)" % (self.name, self.af_id)
@@ -115,6 +119,7 @@ class GroupMemberhip(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     role = models.SlugField(choices=MEMBERSHIP_ROLES)
+    last_update = models.DateField()
 
     class Meta:
         unique_together = ('group', 'account')

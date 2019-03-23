@@ -159,12 +159,25 @@ def get_export_kind_from_filename(file_path):
     Example of path: downloads/ftp/exportusers-afbo-Polytechnique-X-20190323.csv
     """
     file_name = os.path.basename(file_path)
-    match = re.match(r'^export([a-z]+)-afbo[^.]*.csv$', file_name)
+    match = re.match(r'^export([a-z]+)-afbo[^.]*\.csv$', file_name)
     if match:
         kind = match.group(1)
         if kind not in KNOWN_EXPORT_KINDS:
             raise ValueError("unknown export kind %r" % kind)
         return kind
+    return None
+
+
+def get_export_date_from_filename(file_path):
+    """Return the date a file has been exported, from its path
+
+    Example of path: downloads/ftp/exportusers-afbo-Polytechnique-X-20190323.csv
+    """
+    file_name = os.path.basename(file_path)
+    match = re.match(r'.*([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])\.csv$', file_name)
+    if match:
+        year, month, day = match.groups()
+        return datetime.date(year=int(year), month=int(month), day=int(day))
     return None
 
 
@@ -204,6 +217,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for file_path in options['csvfile']:
+            file_date = get_export_date_from_filename(file_path)
+            if not file_date:
+                raise CommandError("Unable to find a date in file path %r" % file_path)
+
             try:
                 file_kind = get_export_kind_from_filename(file_path)
             except ValueError as exc:
@@ -224,6 +241,7 @@ class Command(BaseCommand):
 
             if file_kind == "users":
                 for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
+                    value['last_update'] = file_date
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from users %r" % file_path))
             elif file_kind == "userdegrees":
@@ -233,10 +251,11 @@ class Command(BaseCommand):
                     except models.Account.DoesNotExist:
                         self.stdout.write(self.style.WARNING(
                             "Unable to find user with AF ID %d (AX ID %r)" % (value['af_id'], value['ax_id'])))
-                    else:
-                        del value['af_id']
-                        del value['ax_id']
-                        models.AcademicInformation.objects.update_or_create(account=account, defaults=value)
+                        continue
+                    del value['af_id']
+                    del value['ax_id']
+                    value['last_update'] = file_date
+                    models.AcademicInformation.objects.update_or_create(account=account, defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from user degrees %r" % file_path))
             elif file_kind == "userjobs":
                 for value in load_csv(file_path, ALUMNFORCE_USERJOB_FIELDS):
@@ -245,13 +264,15 @@ class Command(BaseCommand):
                     except models.Account.DoesNotExist:
                         self.stdout.write(self.style.WARNING(
                             "Unable to find user with AF ID %d (AX ID %r)" % (value['af_id'], value['ax_id'])))
-                    else:
-                        del value['af_id']
-                        del value['ax_id']
-                        models.ProfessionnalInformation.objects.update_or_create(account=account, defaults=value)
+                        continue
+                    del value['af_id']
+                    del value['ax_id']
+                    value['last_update'] = file_date
+                    models.ProfessionnalInformation.objects.update_or_create(account=account, defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from user jobs %r" % file_path))
             elif file_kind == "groups":
                 for value in load_csv(file_path, ALUMNFORCE_GROUP_FIELDS):
+                    value['last_update'] = file_date
                     models.Group.objects.update_or_create(af_id=value['af_id'], defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from groups %r" % file_path))
             elif file_kind == "groupmembers":
@@ -277,7 +298,7 @@ class Command(BaseCommand):
                     models.GroupMemberhip.objects.update_or_create(
                         account=account,
                         group=group,
-                        defaults={'role': role},
+                        defaults={'role': role, 'last_update': file_date},
                     )
                 self.stdout.write(self.style.SUCCESS("Loaded values from group members %r" % file_path))
             else:
