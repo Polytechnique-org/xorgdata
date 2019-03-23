@@ -48,6 +48,11 @@ class Account(models.Model):
     newsletter_inscriptions = UnboundedCharField(blank=True)
     profile_picture_url = UnboundedCharField(blank=True)
 
+    def __str__(self):
+        if self.ax_id:
+            return "%s (AX ID %s)" % (self.xorg_id, self.ax_id)
+        return self.xorg_id
+
 
 class AcademicInformation(models.Model):
     account = models.ForeignKey('Account', on_delete=models.CASCADE)
@@ -91,6 +96,9 @@ class Group(models.Model):
     url = UnboundedCharField(blank=True)
     name = UnboundedCharField(blank=True)
     category = UnboundedCharField(blank=True)
+
+    def __str__(self):
+        return "%s (AF ID %s)" % (self.name, self.af_id)
 
 
 class GroupMemberhip(models.Model):
