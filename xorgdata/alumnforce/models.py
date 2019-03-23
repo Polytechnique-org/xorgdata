@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from xorgdata.utils.fields import DottedSlugField, UnboundedCharField
 
@@ -82,3 +83,30 @@ class ProfessionnalInformation(models.Model):
     current = models.NullBooleanField()
     creator_of_company = models.NullBooleanField()
     buyer_of_company = models.NullBooleanField()
+
+
+class Group(models.Model):
+    af_id = models.IntegerField(primary_key=True)
+    ax_id = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    url = UnboundedCharField(blank=True)
+    name = UnboundedCharField(blank=True)
+    category = UnboundedCharField(blank=True)
+
+
+class GroupMemberhip(models.Model):
+    # Use memership values defined by Alumnforce
+    MEMBERSHIP_ROLES = (
+        ('banned', _('banned')),
+        ('invited', _('invited')),
+        ('member', _('member')),
+        ('moderator', _('moderator')),
+        ('onlist', _('on list')),
+        ('responsible', _('responsible')),
+        ('unsubscribed', _('unsubscribed')),
+    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    role = models.SlugField(choices=MEMBERSHIP_ROLES)
+
+    class Meta:
+        unique_together = ('group', 'account')

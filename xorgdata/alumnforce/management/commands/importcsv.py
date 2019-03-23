@@ -119,6 +119,29 @@ ALUMNFORCE_USERJOB_FIELDS = {
     'J\'ai créé cette entreprise ?': ('creator_of_company', bool_or_none),
     'J\'ai repris cette entreprise ?': ('buyer_of_company', bool_or_none),
 }
+ALUMNFORCE_GROUP_FIELDS = {
+    'Identifiant AF': ('af_id', int),
+    'Matricule AX': ('ax_id', str),
+    'URL du groupe': ('url', str),
+    'Nom du groupe': ('name', str),
+    'Catégorie du groupe': ('category', str),
+}
+ALUMNFORCE_GROUPMEMBER_FIELDS = {
+    'Identifiant AF utilisateur': ('user_id', int),
+    'Matricule AX': ('user_ax_id', str),
+    'Identifiant AF groupe': ('group_id', int),
+    'Rôle dans le groupe': ('role', str),
+}
+ALUMNFORCE_GROUPMEMBER_ROLES = {
+    'banni': 'banned',
+    'désinscrit': 'unsubscribed',
+    'invité': 'invited',
+    'membre': 'member',
+    'modérateur': 'moderator',
+    'responsable': 'responsible',
+    'sur liste': 'onlist',
+}
+
 
 # Kind of export file
 KNOWN_EXPORT_KINDS = frozenset((
@@ -228,8 +251,34 @@ class Command(BaseCommand):
                         models.ProfessionnalInformation.objects.update_or_create(account=account, defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from user jobs %r" % file_path))
             elif file_kind == "groups":
-                pass
+                for value in load_csv(file_path, ALUMNFORCE_GROUP_FIELDS):
+                    models.Group.objects.update_or_create(af_id=value['af_id'], defaults=value)
+                self.stdout.write(self.style.SUCCESS("Loaded values from groups %r" % file_path))
             elif file_kind == "groupmembers":
-                pass
+                for value in load_csv(file_path, ALUMNFORCE_GROUPMEMBER_FIELDS):
+                    try:
+                        account = models.Account.objects.get(af_id=value['user_id'])
+                    except models.Account.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(
+                            "Unable to find user with AF ID %d (AX ID %r)" % (value['user_id'], value['user_ax_id'])))
+                        continue
+                    try:
+                        group = models.Group.objects.get(af_id=value['group_id'])
+                    except models.Group.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(
+                            "Unable to find group with AF ID %d" % value['group_id']))
+                        continue
+                    try:
+                        role = ALUMNFORCE_GROUPMEMBER_ROLES[value['role']]
+                    except KeyError:
+                        self.stdout.write(self.style.WARNING(
+                            "Unable to find group role %r" % value['role']))
+                        continue
+                    models.GroupMemberhip.objects.update_or_create(
+                        account=account,
+                        group=group,
+                        defaults={'role': role},
+                    )
+                self.stdout.write(self.style.SUCCESS("Loaded values from group members %r" % file_path))
             else:
                 raise CommandError("Unknown kind %r" % file_kind)
