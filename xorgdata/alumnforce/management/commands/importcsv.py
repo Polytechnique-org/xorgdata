@@ -153,7 +153,7 @@ class Command(BaseCommand):
 
             if file_kind == "users":
                 for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
-                        models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
+                    models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
                 self.stdout.write(self.style.SUCCESS("Loaded values from users %r" % file_path))
             elif file_kind == "userdegrees":
                 pass

@@ -6,6 +6,7 @@ from django.contrib import admin
 
 from . import models
 
+
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
     search_fields = ['hrid', 'main_email', 'fullname', 'preferred_name']

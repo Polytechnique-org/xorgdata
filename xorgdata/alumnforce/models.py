@@ -2,7 +2,7 @@ from django.db import models
 
 from xorgdata.utils.fields import DottedSlugField, UnboundedCharField
 
-# Create your models here.
+
 class Account(models.Model):
     af_id = models.IntegerField(primary_key=True)
     ax_id = models.CharField(max_length=20, blank=True, null=True, unique=True)
@@ -47,6 +47,7 @@ class Account(models.Model):
     newsletter_inscriptions = UnboundedCharField(blank=True)
     profile_picture_url = UnboundedCharField(blank=True)
 
+
 class AcademicInformation(models.Model):
     account = models.ForeignKey('Account', on_delete=models.CASCADE)
     diploma_reference = UnboundedCharField()
@@ -55,6 +56,7 @@ class AcademicInformation(models.Model):
     cycle = UnboundedCharField(blank=True)
     domain = UnboundedCharField(blank=True)
     name = UnboundedCharField(blank=True)
+
 
 class ProfessionnalInformation(models.Model):
     account = models.ForeignKey('Account', on_delete=models.CASCADE)

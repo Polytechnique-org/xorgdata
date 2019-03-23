@@ -35,4 +35,4 @@ validate_dotted_slug = RegexValidator(
 
 class DottedSlugField(models.CharField):
     """Slug field which allows dot"""
-default_validators = [validate_dotted_slug]
+    default_validators = [validate_dotted_slug]
