@@ -92,7 +92,7 @@ ALUMNFORCE_FIELDS = (
     ('Adresse personnelle - État', 'personal.address.state', None),
     ('Adresse personnelle - Code postal', 'personal.address.code', None),
     ('Adresse personnelle - Cedex', 'personal.address.cedex', None),
-    ('Adresse personnelle - Pays (ISO)', 'personal.address.contry', None),
+    ('Adresse personnelle - Pays (ISO)', 'personal.address.country', None),
     ('Adresse personnelle - NPAI (Oui [1] / Non [0])', 'personal.address.bounced', BoolType),
     ('Téléphone fixe personnel', 'personal.fix_phone', None),
     ('Téléphone mobile personnel', 'personal.cell_phone', None),
