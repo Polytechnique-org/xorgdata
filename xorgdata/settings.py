@@ -196,3 +196,10 @@ if USE_HTTPS:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_HSTS_SECONDS = config.getint('security.hsts_seconds', 15768000)
+
+# AlumnForce FTPS settings
+ALUMNFORCE_FTP_HOST = config.getstr("alumnforce_ftp.host", "ftpsecure.alumnforce.org")
+ALUMNFORCE_FTP_USER = config.getstr("alumnforce_ftp.user")
+ALUMNFORCE_FTP_PASSWORD = config.getstr("alumnforce_ftp.password")
+ALUMNFORCE_FTP_REMOTE_DIRECTORY = config.getstr("alumnforce_ftp.remote_directory", "export")
+ALUMNFORCE_FTP_LOCAL_DIRECTORY = config.getstr("alumnforce_ftp.local_directory", "/tmp/xorgdata-download")
