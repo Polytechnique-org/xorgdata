@@ -14,15 +14,19 @@ from xorgdata.alumnforce import models
 def bool_or_none(txt):
     if txt == '':
         return None
-    else:
+    elif txt in ('0', '1'):
         return bool(int(txt))
+    else:
+        raise ValueError("invalid bool value {}".format(repr(txt)))
 
 
 def int_or_none(txt):
     if txt == '':
         return None
-    else:
+    elif re.match(r'^[0-9]+$', txt):
         return int(txt)
+    else:
+        raise ValueError("invalid integer value: {}".format(repr(txt)))
 
 
 FRENCH_DATE_RE = re.compile(r'(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})$')
