@@ -144,13 +144,7 @@ ALUMNFORCE_GROUPMEMBER_ROLES = {
 
 
 # Kind of export file
-KNOWN_EXPORT_KINDS = frozenset((
-    'groupmembers',
-    'groups',
-    'userdegrees',
-    'userjobs',
-    'users',
-))
+KNOWN_EXPORT_KINDS = frozenset(x[0] for x in models.ImportLog.KNOWN_EXPORT_KINDS)
 
 
 def get_export_kind_from_filename(file_path):
@@ -215,6 +209,30 @@ class Command(BaseCommand):
         parser.add_argument('csvfile', nargs='+', type=str,
                             help="path to CSV file to load")
 
+    def log_success(self, file_date, file_kind, num_values, file_path):
+        """Log a successful import"""
+        message = "Loaded {} values from {} {}".format(num_values, file_kind, repr(file_path))
+        self.stdout.write(self.style.SUCCESS(message))
+        models.ImportLog.objects.create(
+            date=file_date,
+            export_kind=file_kind,
+            is_incremental=True,
+            error=models.ImportLog.SUCCESS,
+            num_modified=num_values,
+            message=message,
+        )
+
+    def log_warning(self, file_date, file_kind, message):
+        """Log a warning while processing an import"""
+        self.stdout.write(self.style.WARNING(message))
+        models.ImportLog.objects.create(
+            date=file_date,
+            export_kind=file_kind,
+            is_incremental=True,
+            error=models.ImportLog.XORG_ERROR,
+            message=message,
+        )
+
     def handle(self, *args, **options):
         for file_path in options['csvfile']:
             file_date = get_export_date_from_filename(file_path)
@@ -240,66 +258,90 @@ class Command(BaseCommand):
                         file_path, file_kind, options['kind']))
 
             if file_kind == "users":
+                num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
                     value['last_update'] = file_date
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
-                self.stdout.write(self.style.SUCCESS("Loaded values from users %r" % file_path))
+                    num_values += 1
+                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "userdegrees":
+                num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_USERDEGREE_FIELDS):
                     try:
                         account = models.Account.objects.get(af_id=value['af_id'])
                     except models.Account.DoesNotExist:
-                        self.stdout.write(self.style.WARNING(
-                            "Unable to find user with AF ID %d (AX ID %r)" % (value['af_id'], value['ax_id'])))
+                        self.log_warning(
+                            file_date, file_kind,
+                            "Unable to find user with AF ID {} (AX ID {})".format(
+                                value['af_id'], repr(value['ax_id'])
+                            ))
                         continue
                     del value['af_id']
                     del value['ax_id']
                     value['last_update'] = file_date
                     models.AcademicInformation.objects.update_or_create(account=account, defaults=value)
-                self.stdout.write(self.style.SUCCESS("Loaded values from user degrees %r" % file_path))
+                    num_values += 1
+                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "userjobs":
+                num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_USERJOB_FIELDS):
                     try:
                         account = models.Account.objects.get(af_id=value['af_id'])
                     except models.Account.DoesNotExist:
-                        self.stdout.write(self.style.WARNING(
-                            "Unable to find user with AF ID %d (AX ID %r)" % (value['af_id'], value['ax_id'])))
+                        self.log_warning(
+                            file_date, file_kind,
+                            "Unable to find user with AF ID {} (AX ID {})".format(
+                                value['af_id'], repr(value['ax_id'])
+                            ))
                         continue
                     del value['af_id']
                     del value['ax_id']
                     value['last_update'] = file_date
                     models.ProfessionnalInformation.objects.update_or_create(account=account, defaults=value)
-                self.stdout.write(self.style.SUCCESS("Loaded values from user jobs %r" % file_path))
+                    num_values += 1
+                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "groups":
+                num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_GROUP_FIELDS):
                     value['last_update'] = file_date
                     models.Group.objects.update_or_create(af_id=value['af_id'], defaults=value)
-                self.stdout.write(self.style.SUCCESS("Loaded values from groups %r" % file_path))
+                    num_values += 1
+                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "groupmembers":
+                num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_GROUPMEMBER_FIELDS):
                     try:
                         account = models.Account.objects.get(af_id=value['user_id'])
                     except models.Account.DoesNotExist:
-                        self.stdout.write(self.style.WARNING(
-                            "Unable to find user with AF ID %d (AX ID %r)" % (value['user_id'], value['user_ax_id'])))
+                        self.log_warning(
+                            file_date, file_kind,
+                            "Unable to find user with AF ID {} (AX ID {})".format(
+                                value['user_id'], repr(value['user_ax_id'])
+                            ))
                         continue
                     try:
                         group = models.Group.objects.get(af_id=value['group_id'])
                     except models.Group.DoesNotExist:
-                        self.stdout.write(self.style.WARNING(
-                            "Unable to find group with AF ID %d" % value['group_id']))
+                        self.log_warning(
+                            file_date, file_kind,
+                            "Unable to find group with AF ID {}".format(
+                                value['group_id']
+                            ))
                         continue
                     try:
                         role = ALUMNFORCE_GROUPMEMBER_ROLES[value['role']]
                     except KeyError:
-                        self.stdout.write(self.style.WARNING(
-                            "Unable to find group role %r" % value['role']))
+                        self.log_warning(
+                            file_date, file_kind,
+                            "Unable to find group role {}".format(repr(value['role']))
+                        )
                         continue
                     models.GroupMemberhip.objects.update_or_create(
                         account=account,
                         group=group,
                         defaults={'role': role, 'last_update': file_date},
                     )
-                self.stdout.write(self.style.SUCCESS("Loaded values from group members %r" % file_path))
+                    num_values += 1
+                self.log_success(file_date, file_kind, num_values, file_path)
             else:
                 raise CommandError("Unknown kind %r" % file_kind)

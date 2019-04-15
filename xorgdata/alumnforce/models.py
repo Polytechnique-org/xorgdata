@@ -123,3 +123,29 @@ class GroupMemberhip(models.Model):
 
     class Meta:
         unique_together = ('group', 'account')
+
+
+class ImportLog(models.Model):
+    # Kind of export file
+    KNOWN_EXPORT_KINDS = (
+        ('groupmembers', _('groupmembers')),
+        ('groups', _('groups')),
+        ('userdegrees', _('userdegrees')),
+        ('userjobs', _('userjobs')),
+        ('users', _('users')),
+    )
+    # Error code when importing data
+    SUCCESS = 0
+    ALUMNFORCE_ERROR = 1
+    XORG_ERROR = 2
+    ERROR_CODES = (
+        (SUCCESS, _('success')),
+        (ALUMNFORCE_ERROR, _('AlumnForce error')),
+        (XORG_ERROR, _('X.org error')),
+    )
+    date = models.DateField()
+    export_kind = models.SlugField(choices=KNOWN_EXPORT_KINDS)
+    is_incremental = models.BooleanField()
+    error = models.IntegerField(choices=ERROR_CODES)
+    num_modified = models.IntegerField(null=True, blank=True)
+    message = UnboundedCharField(blank=True)
