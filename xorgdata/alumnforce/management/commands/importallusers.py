@@ -9,6 +9,8 @@ from django.core.management.base import BaseCommand, CommandError
 from xorgdata.alumnforce import models
 from xorgdata.alumnforce.full_export.lib.converters import AlumnForceDataC2J
 
+from .importcsv import parse_french_date
+
 
 def get_export_date_from_filename(file_path):
     """Return the date a file has been exported from the website, from its path
@@ -52,12 +54,12 @@ class Command(BaseCommand):
         for user_data in json_obj.content:
             # Prepare a dict for insertion into the Django database
             fields = {
-                'ax_id': user_data['id_ax'],
+                'ax_id': user_data['id_ax'] or None,
                 'first_name': user_data['first_name'],
                 'last_name': user_data['last_name'],
                 'common_name': user_data['usage_name'],
                 'civility': user_data['civility'],
-                'birthdate': user_data['birth_date'],
+                'birthdate': parse_french_date(user_data['birth_date']),
                 'address_1': user_data['personal']['address']['line_1'],
                 'address_2': user_data['personal']['address']['line_2'],
                 'address_3': user_data['personal']['address']['line_3'],
@@ -75,11 +77,11 @@ class Command(BaseCommand):
                 'nationality_2': user_data['nationality_2'],
                 'nationality_3': user_data['nationality_3'],
                 'dead': user_data['is_dead'],
-                'deathdate': user_data['death_date'],
+                'deathdate': parse_french_date(user_data['death_date']),
                 'dead_for_france': user_data['dead_for_france'],
                 'user_kind': user_data['user_kind'],
-                'additional_roles': user_data['roles'],
-                'xorg_id': user_data['xorg']['login'],
+                'additional_roles': '',
+                'xorg_id': user_data['xorg']['login'] or None,
                 'school_id': user_data['school']['id'],
                 'admission_path': user_data['school']['input'],
                 'cursus_domain': user_data['school']['domain'],
@@ -89,11 +91,14 @@ class Command(BaseCommand):
                 'corps_grade': user_data['corps']['grade'],
                 'nickname': user_data['nickname'],
                 'sport_section': user_data['school']['sport'],
-                'binets': user_data['school']['binets'],
+                'binets': user_data['school']['binets'] or '',
                 'mail_reception': user_data['has_postal_mail'],
-                'newsletter_inscriptions': user_data['newsletters'],
+                'newsletter_inscriptions': user_data['newsletters'] or '',
                 'last_update': file_date,
             }
+            if user_data['roles']:
+                # Format the additional roles as a list of integers
+                fields['additional_roles'] = ','.join(user_data['roles'])
             models.Account.objects.update_or_create(af_id=user_data['id_af'], defaults=fields)
 
         num_users = len(json_obj.content)

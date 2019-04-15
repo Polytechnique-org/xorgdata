@@ -1,3 +1,4 @@
+from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -32,8 +33,9 @@ class Account(models.Model):
     deathdate = models.DateField(blank=True, null=True)
     dead_for_france = UnboundedCharField(blank=True)
     user_kind = models.IntegerField()
-    additional_roles = models.IntegerField(blank=True, null=True)
-    xorg_id = DottedSlugField(unique=True, max_length=255)
+    additional_roles = UnboundedCharField(blank=True,
+                                          validators=[validate_comma_separated_integer_list])
+    xorg_id = DottedSlugField(max_length=255, blank=True, null=True, unique=True)
     school_id = UnboundedCharField(blank=True)
     admission_path = UnboundedCharField(blank=True)
     cursus_domain = UnboundedCharField(blank=True)

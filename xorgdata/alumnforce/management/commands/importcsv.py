@@ -32,7 +32,7 @@ def int_or_none(txt):
 FRENCH_DATE_RE = re.compile(r'(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})$')
 
 
-def parse_date(value):
+def parse_french_date(value):
     # Copy from django.utils.dateparse which supports dates in French format
     if not value:
         return None
@@ -51,7 +51,7 @@ ALUMNFORCE_USER_FIELDS = {
     'Nom d\'état civil': ('last_name', str),
     'Nom d\'usage': ('common_name', str),
     'Civilité': ('civility', str),
-    'Date de naissance': ('birthdate', parse_date),
+    'Date de naissance': ('birthdate', parse_french_date),
     'Adresse personnelle - Ligne 1': ('address_1', str),
     'Adresse personnelle - Ligne 2': ('address_2', str),
     'Adresse personnelle - Ligne 3': ('address_3', str),
@@ -67,7 +67,7 @@ ALUMNFORCE_USER_FIELDS = {
     'Email personnel 2': ('email_2', str),
     'Nationalité': ('nationality', str),
     'Décédé': ('dead', bool_or_none),
-    'Date de décès': ('deathdate', parse_date),
+    'Date de décès': ('deathdate', parse_french_date),
     'Type d\'utilisateur': ('user_kind', int),
     'Rôles supplémentaires': ('additional_roles', int_or_none),
     'Login X.org': ('xorg_id', str),
@@ -93,7 +93,7 @@ ALUMNFORCE_USERDEGREE_FIELDS = {
     'Identifiant école': ('ax_id', str),
     'Référence du diplôme': ('diploma_reference', str),
     'A obtenu son diplôme ?': ('diplomed', bool_or_none),
-    'Date d\'obtention du diplôme': ('diplomation_date', parse_date),
+    'Date d\'obtention du diplôme': ('diplomation_date', parse_french_date),
     'Mode de formation': ('domain', str),
     'Cycle': ('name', str),
 }
@@ -116,8 +116,8 @@ ALUMNFORCE_USERJOB_FIELDS = {
     'Téléphone mobile professionnel': ('mobile_phone_number', str),
     'Fax professionnel': ('fax', str),
     'Email professionnel': ('email', str),
-    'Date de début de l\'expérience': ('start_date', parse_date),
-    'Date de fin de l\'expérience': ('end_date', parse_date),
+    'Date de début de l\'expérience': ('start_date', parse_french_date),
+    'Date de fin de l\'expérience': ('end_date', parse_french_date),
     'Type de contrat': ('contract_kind', str),
     'Poste actuel ?': ('current', bool_or_none),
     'J\'ai créé cette entreprise ?': ('creator_of_company', bool_or_none),
