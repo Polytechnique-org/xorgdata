@@ -79,7 +79,7 @@ ALUMNFORCE_FIELDS = (
     ('Identifiant (AlumnForce)', 'id_af', None),
     ('Identifiant (École)', 'id_ax', None),
     ('Prénom', 'first_name', None),
-    ('Nom d\'état-civil*', 'last_name', None),
+    ('Nom d\'état-civil', 'last_name', None),
     ('Nom d\'usage', 'usage_name', None),
     ('Civilité (Mme / Mlle / M.)', 'civility', None),
     ('Date de naissance', 'birth_date', None),
@@ -101,14 +101,14 @@ ALUMNFORCE_FIELDS = (
     ('Nationalité', 'nationality', None),
     ('Situation matrimoniale', 'marital_status', None),
     ('Membre décédé (Oui [1] / Non [0])', 'is_dead', BoolType),
-    ("Statut (Non enregistré [0] / En cours d'activation [1] / Compte bloqué [2] / Compte activé [3] / Clé d'activation envoyée [4] / Ne souhaite pas activer son compte [6])", 'account_status', None),  # noqa
+    ("Statut (Non enregistré [0] / En cours d'activation [1] / Compte bloqué [2] / Compte activé [3] / Clé d'activation envoyée [4] / En attente de validation [5] / Ne souhaite pas activer son compte [6] / Compte expiré [8])", 'account_status', None),  # noqa
     ('Compte activé (Oui [1] / Non [0])', 'is_activated', BoolType),
-    ("Type utilisateur (Diplômé [1] / Personnel de l'association [3] / Élève et étudiant [5] / Visiteur [7] / Membre associé [9])", 'user_kind', None),  # noqa
-    ('Rôle supplémentaire (Visiteur [1] / Administrateur total [3] / Diplômé [4] / Cotisant [5] / Élève et étudiant [7] / Abonné [17] / Membre associé [19] / Administrateur contenu [21])', 'roles', CommaListType),  # noqa
+    ("Type utilisateur (Diplômé(e) [1] / Personnel de l'association [3] / Élève / étudiant(e) [5] / Visiteur [7] / Membre associé [9] / Veuves/Veufs [10])", 'user_kind', None),  # noqa
+    ('Rôle supplémentaire (Visiteur [1] / Administrateur total [3] / Diplômé [4] / Cotisant [5] / Élève et étudiant [7] / Abonné [17] / Membre associé [19] / Administrateur contenu [21] / Administrateur comptable [22] / Veuves/Veufs [26] /  [27])', 'roles', CommaListType),  # noqa
     ('Forcer le statut de cotisant (Oui [1] / Non [0])', 'force_contributor', BoolType),
     ('Référence du diplôme', 'school.degree_ref', None),
     ('Ecole', 'school.name', None),
-    ('Cycle (L/M/D)', 'school.stream', None),
+    ('Filière (L/M/D)', 'school.stream', None),
     ('Spécialisation', 'speciality', None),
     ('Parcours', 'curriculum', None),
     ("Niveau d'étude / Nombre d'années post bac", 'study_level', None),
@@ -197,4 +197,5 @@ ALUMNFORCE_FIELDS = (
     ('Secteurs référent', 'referrer.sectors', None),
     ('Commentaire référent', 'referrer.comment', None),
     ('Info sup : commentaires divers', 'comments', None),
+    ('Url d\'appel à cotisation', 'url_contribution', None),
 )
