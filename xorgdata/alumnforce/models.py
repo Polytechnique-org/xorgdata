@@ -7,7 +7,7 @@ from xorgdata.utils.fields import DottedSlugField, UnboundedCharField
 
 class Account(models.Model):
     af_id = models.IntegerField(primary_key=True)
-    ax_id = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    ax_id = models.CharField(max_length=20, blank=True, null=True)
     first_name = UnboundedCharField()
     last_name = UnboundedCharField()
     common_name = UnboundedCharField(blank=True)
@@ -35,7 +35,7 @@ class Account(models.Model):
     user_kind = models.IntegerField()
     additional_roles = UnboundedCharField(blank=True,
                                           validators=[validate_comma_separated_integer_list])
-    xorg_id = DottedSlugField(max_length=255, blank=True, null=True, unique=True)
+    xorg_id = DottedSlugField(max_length=255, blank=True, null=True)
     school_id = UnboundedCharField(blank=True)
     admission_path = UnboundedCharField(blank=True)
     cursus_domain = UnboundedCharField(blank=True)
