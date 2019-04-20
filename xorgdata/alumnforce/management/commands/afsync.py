@@ -107,13 +107,14 @@ class Command(BaseCommand):
             # Apply all possible files, sorting them by date
             for date_str, filename_expok in sorted(conn.ftp_files[kind].items()):
                 filename, is_export_ok = filename_expok
-                if date_str < last_update_date:
-                    continue
-                # Allow an incremental update to occur after a full export has
-                # been imported for a given date, but do not apply the same
-                # incremental update twice.
-                if date_str == last_update_date and last_was_incremental:
-                    continue
+                if last_update_date is not None:
+                    if date_str < last_update_date:
+                        continue
+                    # Allow an incremental update to occur after a full export has
+                    # been imported for a given date, but do not apply the same
+                    # incremental update twice.
+                    if date_str == last_update_date and last_was_incremental:
+                        continue
 
                 file_date = datetime.date(year=int(date_str[:4]), month=int(date_str[4:6]), day=int(date_str[6:]))
 
