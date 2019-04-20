@@ -183,14 +183,14 @@ def load_csv(csv_file_path, fields):
     with open(csv_file_path, 'r', encoding='utf-8') as csv_stream:
         reader = csv.reader(csv_stream, delimiter='\t', quotechar='"', escapechar='\\', strict=True)
         header_row = []
-        convertions = []
+        conversions = []
         for row in reader:
             if reader.line_num == 1:
                 # Parse the header line
                 for col_name in row:
                     # Use the `fields` translation if it is known, otherwise the column name
                     header_row.append(fields.get(col_name, col_name)[0])
-                    convertions.append(fields.get(col_name, col_name)[1])
+                    conversions.append(fields.get(col_name, col_name)[1])
 
                 # Sanity check
                 assert len(set(header_row)) == len(header_row), \
@@ -200,7 +200,7 @@ def load_csv(csv_file_path, fields):
             assert len(row) == len(header_row), \
                 "The CSV line {} has a different length from the header".format(reader.line_num)
             # convert the values as appropriate
-            row = [conv(val) for (val, conv) in zip(row, convertions)]
+            row = [conv(val) for (val, conv) in zip(row, conversions)]
             yield dict(zip(header_row, row))
 
 
