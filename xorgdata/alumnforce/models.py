@@ -128,13 +128,15 @@ class GroupMemberhip(models.Model):
 
 
 class ImportLog(models.Model):
-    # Kind of export file
+    # Kind of export file. Order is important as it determines the order used to
+    # parse incoming export files: users need to be first created, then groups,
+    # then everything else (that depends on users and/or groups).
     KNOWN_EXPORT_KINDS = (
-        ('groupmembers', _('groupmembers')),
+        ('users', _('users')),
         ('groups', _('groups')),
+        ('groupmembers', _('groupmembers')),
         ('userdegrees', _('userdegrees')),
         ('userjobs', _('userjobs')),
-        ('users', _('users')),
     )
     # Error code when importing data
     SUCCESS = 0

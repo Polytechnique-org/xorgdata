@@ -69,7 +69,7 @@ ALUMNFORCE_USER_FIELDS = {
     'Décédé': ('dead', bool_or_none),
     'Date de décès': ('deathdate', parse_french_date),
     'Type d\'utilisateur': ('user_kind', int),
-    'Rôles supplémentaires': ('additional_roles', int_or_none),
+    'Rôles supplémentaires': ('additional_roles', str),  # comma-separated integers
     'Login X.org': ('xorg_id', str),
     'Matricule école': ('school_id', str),
     'Voie d\'entrée': ('admission_path', str),
@@ -216,7 +216,8 @@ class Command(BaseCommand):
     def log_success(self, file_date, file_kind, num_values, file_path):
         """Log a successful import"""
         message = "Loaded {} values from {} {}".format(num_values, file_kind, repr(file_path))
-        self.stdout.write(self.style.SUCCESS(message))
+        if self.verbosity:
+            self.stdout.write(self.style.SUCCESS(message))
         models.ImportLog.objects.create(
             date=file_date,
             export_kind=file_kind,
@@ -228,7 +229,8 @@ class Command(BaseCommand):
 
     def log_warning(self, file_date, file_kind, message):
         """Log a warning while processing an import"""
-        self.stdout.write(self.style.WARNING(message))
+        if self.verbosity:
+            self.stdout.write(self.style.WARNING(message))
         models.ImportLog.objects.create(
             date=file_date,
             export_kind=file_kind,
@@ -238,6 +240,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        self.verbosity = options['verbosity']
+
         for file_path in options['csvfile']:
             file_date = get_export_date_from_filename(file_path)
             if not file_date:
