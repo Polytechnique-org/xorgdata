@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>X.org Data synchronization summary</title>
+    <style type="text/css"><!--
+        a {
+            text-decoration: none;
+            color: blue;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    --></style>
+</head>
+<body>
+    <h1>Summary of synchronization between <a href="https://ax.polytechnique.org/">AX</a> and <a href="https://www.polytechnique.org/">Polytechnique.org</a></h1>
+    <ul>
+    {% for log_obj in view.last_logs_by_kind %}
+        <li>File &lsquo;&lsquo;<code>{{ log_obj.get_export_kind_display }}</code>&rsquo;&rsquo;: {{ log_obj.get_error_display }} on {{ log_obj.date|date:"Y-m-d" }}
+    {% endfor %}
+    </ul>
+</body>
+</html>
