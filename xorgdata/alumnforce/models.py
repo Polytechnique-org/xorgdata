@@ -60,8 +60,8 @@ class Account(models.Model):
 class AcademicInformation(models.Model):
     account = models.ForeignKey('Account', on_delete=models.CASCADE)
     diploma_reference = UnboundedCharField()
-    diplomed = models.BooleanField()
-    diplomation_date = models.DateField()
+    diplomed = models.NullBooleanField()
+    diplomation_date = models.DateField(blank=True, null=True)
     cycle = UnboundedCharField(blank=True)
     domain = UnboundedCharField(blank=True)
     name = UnboundedCharField(blank=True)
