@@ -56,7 +56,7 @@ class Command(BaseCommand):
         json_obj = AlumnForceDataC2J.import_csv_file(file_path, keep_empty=True)
         for user_data in json_obj.content:
             # Prepare a dict for insertion into the Django database
-            af_id = user_data['id_af']
+            af_id = int(user_data['id_af'])
             fields = {
                 'ax_id': user_data['id_ax'] or None,
                 'first_name': user_data['first_name'],

@@ -145,3 +145,4 @@ class ImportAllUsersTests(TestCase):
         # Check whether the account has been marked as deleted
         account.refresh_from_db()
         self.assertEqual(account.deleted_since, datetime.date(2001, 2, 3))
+        self.assertEqual(Account.objects.filter(deleted_since=datetime.date(2001, 2, 3)).count(), 1)
