@@ -43,7 +43,7 @@ class GroupMembershipInline(admin.TabularInline):
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
     search_fields = ('ax_id', 'xorg_id', 'first_name', 'last_name', 'common_name')
-    list_display = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name')
+    list_display = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name', 'deleted_since')
     list_display_links = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name')
     ordering = ('-ax_id', 'xorg_id', 'af_id')
 
