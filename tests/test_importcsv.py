@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils.six import StringIO
 
-from xorgdata.alumnforce.models import Account, Group
+from xorgdata.alumnforce.models import Account, Group, ImportLog
 
 
 TEST_CSV_FILES = (
@@ -41,6 +41,15 @@ class ImportCsvTests(TestCase):
                     print(out_line)
             self.assertEqual(num_error_lines, 0)
 
+            # Ensure the import is logged correctly
+            import_log = ImportLog.objects.get(export_kind=kind)
+            self.assertEqual(import_log.date, datetime.date(2001, 2, 3))
+            self.assertEqual(import_log.export_kind, kind)
+            self.assertEqual(import_log.is_incremental, True)
+            self.assertEqual(import_log.error, ImportLog.SUCCESS)
+            self.assertGreater(import_log.num_modified, 0)
+            self.assertNotEqual(import_log.message, '')
+
     def test_importcsv_quiet(self):
         for file_path in self.csv_files.values():
             out = StringIO()
@@ -52,6 +61,15 @@ class ImportCsvTests(TestCase):
             out = StringIO()
             call_command('importcsv', '--kind=' + kind, file_path, stdout=out, verbosity=0)
             self.assertEqual(out.getvalue(), '')
+
+            # Ensure the import is logged correctly
+            import_log = ImportLog.objects.get(export_kind=kind)
+            self.assertEqual(import_log.date, datetime.date(2001, 2, 3))
+            self.assertEqual(import_log.export_kind, kind)
+            self.assertEqual(import_log.is_incremental, True)
+            self.assertEqual(import_log.error, ImportLog.SUCCESS)
+            self.assertGreater(import_log.num_modified, 0)
+            self.assertNotEqual(import_log.message, '')
 
     def test_import_csv_user(self):
         # Ensure that the test user did not exist beforehand, in the test database
