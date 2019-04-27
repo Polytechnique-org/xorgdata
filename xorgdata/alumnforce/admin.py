@@ -2,6 +2,7 @@
 # Copyright (c) Polytechnique.org
 # This code is distributed under the Affero General Public License version 3
 from django.contrib import admin
+from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -57,13 +58,11 @@ class AccountAdmin(admin.ModelAdmin):
     def kind_desc(self, obj):
         """Get the description of account kind"""
         return "{} [{}]".format(models.Account.KINDS.get(obj.user_kind, '?'), obj.user_kind)
-
     kind_desc.short_description = _("Account kind")
 
     def roles_desc(self, obj):
         """Get the description of account additional roles"""
         return ', '.join("{} [{}]".format(models.Account.ROLES.get(r, '?'), r) for r in obj.get_additional_roles())
-
     roles_desc.short_description = _("Additional roles")
 
 
@@ -78,15 +77,22 @@ class GroupAdmin(admin.ModelAdmin):
         GroupMembershipInline,
     ]
 
-    def count_members(self, obj):
-        return obj.memberships.filter(role__in=models.GroupMembership.IN_GROUP_ROLES).count()
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _members_count=Count("memberships",
+                                 filter=Q(memberships__role__in=models.GroupMembership.IN_GROUP_ROLES),
+                                 distinct=True),
+        )
+        return queryset
 
+    def count_members(self, obj):
+        return obj._members_count
     count_members.short_description = _("members")
 
     def url_link(self, obj):
         return format_html('<a href="{0}">{0}</a>', obj.url)
-
-    count_members.short_description = _("URL link")
+    url_link.short_description = _("URL link")
 
 
 @admin.register(models.ImportLog)
