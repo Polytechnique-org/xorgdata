@@ -26,7 +26,11 @@
         </tr>
         {% for account_and_issues in issues %}
         <tr>
-            <td>{{ account_and_issues.account }} (<a href="{% url 'admin:alumnforce_account_change' account_and_issues.account.af_id %}">admin</a>)</td>
+            <td>
+            {% with account=account_and_issues.account %}
+                <a href="{{ account.alumnforce_profile_url }}">{{ account }}</a> (<a href="{% url 'admin:alumnforce_account_change' account.af_id %}">admin</a>)
+            {% endwith %}
+            </td>
             <td>
                 <ul>
                     {% for issue in account_and_issues.issues %}

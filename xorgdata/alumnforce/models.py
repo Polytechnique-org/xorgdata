@@ -107,6 +107,11 @@ class Account(models.Model):
             return []
         return [int(r) for r in self.additional_roles.split(',')]
 
+    @property
+    def alumnforce_profile_url(self):
+        """URL on AlumnForce website"""
+        return 'https://ax.polytechnique.org/person/by-id/{:d}'.format(self.af_id)
+
 
 class AcademicInformation(models.Model):
     account = models.ForeignKey('Account', related_name='degrees', on_delete=models.CASCADE)

@@ -46,7 +46,7 @@ class AccountAdmin(admin.ModelAdmin):
     search_fields = ('ax_id', 'xorg_id', 'first_name', 'last_name', 'common_name')
     list_display = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name', 'deleted_since')
     list_display_links = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name')
-    readonly_fields = ('kind_desc', 'roles_desc')
+    readonly_fields = ('kind_desc', 'roles_desc', 'alumnforce_profile_url')
     ordering = ('-ax_id', 'xorg_id', 'af_id')
 
     inlines = [
@@ -64,6 +64,9 @@ class AccountAdmin(admin.ModelAdmin):
         """Get the description of account additional roles"""
         return ', '.join("{} [{}]".format(models.Account.ROLES.get(r, '?'), r) for r in obj.get_additional_roles())
     roles_desc.short_description = _("Additional roles")
+
+    def alumnforce_profile_url(self, obj):
+        return format_html('<a href="{}">{}</a>', obj.alumnforce_profile_url, obj.alumnforce_profile_url)
 
 
 @admin.register(models.Group)
