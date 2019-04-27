@@ -278,38 +278,52 @@ class Command(BaseCommand):
                 self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "userdegrees":
                 num_values = 0
+                seen_accounts = {}
                 for value in load_csv(file_path, ALUMNFORCE_USERDEGREE_FIELDS):
-                    try:
-                        account = models.Account.objects.get(af_id=value['af_id'])
-                    except models.Account.DoesNotExist:
-                        self.log_warning(
-                            file_date, file_kind,
-                            "Unable to find user with AF ID {} (AX ID {})".format(
-                                value['af_id'], repr(value['ax_id'])
-                            ))
-                        continue
+                    account = seen_accounts.get(value['af_id'])
+                    if account is None:
+                        try:
+                            account = models.Account.objects.get(af_id=value['af_id'])
+                        except models.Account.DoesNotExist:
+                            self.log_warning(
+                                file_date, file_kind,
+                                "Unable to find user with AF ID {} (AX ID {})".format(
+                                    value['af_id'], repr(value['ax_id'])
+                                ))
+                            continue
+                        seen_accounts[value['af_id']] = account
+                        # Remove previous degrees when an account is seen for the first time
+                        account.degrees.all().delete()
+                    # Insert a degree
                     del value['af_id']
                     del value['ax_id']
                     value['last_update'] = file_date
-                    models.AcademicInformation.objects.update_or_create(account=account, defaults=value)
+                    account.degrees.create(**value)
                     num_values += 1
                 self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "userjobs":
                 num_values = 0
+                seen_accounts = {}
                 for value in load_csv(file_path, ALUMNFORCE_USERJOB_FIELDS):
-                    try:
-                        account = models.Account.objects.get(af_id=value['af_id'])
-                    except models.Account.DoesNotExist:
-                        self.log_warning(
-                            file_date, file_kind,
-                            "Unable to find user with AF ID {} (AX ID {})".format(
-                                value['af_id'], repr(value['ax_id'])
-                            ))
-                        continue
+                    account = seen_accounts.get(value['af_id'])
+                    if account is None:
+                        try:
+                            account = models.Account.objects.get(af_id=value['af_id'])
+                        except models.Account.DoesNotExist:
+                            self.log_warning(
+                                file_date, file_kind,
+                                "Unable to find user with AF ID {} (AX ID {})".format(
+                                    value['af_id'], repr(value['ax_id'])
+                                ))
+                            continue
+                        seen_accounts[value['af_id']] = account
+                        # Remove previous jobs when an account is seen for the first time
+                        account.jobs.all().delete()
+                    # Insert a job
                     del value['af_id']
                     del value['ax_id']
                     value['last_update'] = file_date
-                    models.ProfessionnalInformation.objects.update_or_create(account=account, defaults=value)
+                    account.jobs.create(**value)
                     num_values += 1
                 self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "groups":
