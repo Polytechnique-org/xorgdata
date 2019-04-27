@@ -8,7 +8,7 @@ from xorgdata.utils.fields import DottedSlugField, UnboundedCharField
 class Account(models.Model):
     # User kinds defined by the AX
     KIND_GRADUATED = 1
-    KIND_EMPLOYEE = 2
+    KIND_EMPLOYEE = 3
     KIND_STUDENT = 5
     KIND_VISITOR = 7
     KIND_ASSOCIATED_MEMBER = 9
