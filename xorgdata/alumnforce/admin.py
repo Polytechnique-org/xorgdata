@@ -62,7 +62,7 @@ class AccountAdmin(admin.ModelAdmin):
 
     def roles_desc(self, obj):
         """Get the description of account additional roles"""
-        return ', '.join("{} [{}]".format(models.Account.ROLES.get(r, '?'), r) for r in obj.get_addtional_roles())
+        return ', '.join("{} [{}]".format(models.Account.ROLES.get(r, '?'), r) for r in obj.get_additional_roles())
 
     roles_desc.short_description = _("Additional roles")
 

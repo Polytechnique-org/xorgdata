@@ -7,13 +7,19 @@ from xorgdata.utils.fields import DottedSlugField, UnboundedCharField
 
 class Account(models.Model):
     # User kinds defined by the AX
+    KIND_GRADUATED = 1
+    KIND_EMPLOYEE = 2
+    KIND_STUDENT = 5
+    KIND_VISITOR = 7
+    KIND_ASSOCIATED_MEMBER = 9
+    KIND_WIDOW = 10
     KINDS = {
-        1: "Diplômé(e)",
-        2: "Personnel de l'AX",
-        5: "Élève/Étudiant(e)",
-        7: "Visiteur",
-        9: "Membre associé",
-        10: "Veuves/Veufs",
+        KIND_GRADUATED: "Diplômé(e)",
+        KIND_EMPLOYEE: "Personnel de l'AX",
+        KIND_STUDENT: "Élève/Étudiant(e)",
+        KIND_VISITOR: "Visiteur",
+        KIND_ASSOCIATED_MEMBER: "Membre associé",
+        KIND_WIDOW: "Veuves/Veufs",
     }
     # Roles defined by the AX
     ROLES = {
@@ -84,7 +90,7 @@ class Account(models.Model):
             return "AX ID %s" % self.ax_id
         return "AF ID %d" % self.af_id
 
-    def get_addtional_roles(self):
+    def get_additional_roles(self):
         """Return the additional roles as a list of integers"""
         if not self.additional_roles:
             return []

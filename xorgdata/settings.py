@@ -148,6 +148,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Use Django admin for authentication
+LOGIN_URL = '/admin/login'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
