@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils.six import StringIO
 
-from xorgdata.alumnforce.models import Account
+from xorgdata.alumnforce.models import Account, Group
 
 
 TEST_CSV_FILES = (
@@ -177,3 +177,34 @@ class ImportCsvTests(TestCase):
         self.assertEqual(user_job.creator_of_company, False)
         self.assertEqual(user_job.buyer_of_company, False)
         self.assertEqual(user_job.last_update, datetime.date(2001, 2, 3))
+
+    def test_import_csv_group(self):
+        # Ensure that the test user and group did not exist beforehand, in the test database
+        self.assertEqual(Account.objects.filter(xorg_id='louis.vaneau.1829').count(), 0)
+        self.assertEqual(Account.objects.filter(af_id=1).count(), 0)
+        self.assertEqual(Group.objects.filter(af_id=1).count(), 0)
+        call_command('importcsv', self.csv_files['users'], verbosity=0)
+        call_command('importcsv', self.csv_files['groups'], verbosity=0)
+        user = Account.objects.get(af_id=1)
+        self.assertIsNotNone(user)
+        group = Group.objects.get(af_id=1)
+        self.assertIsNotNone(group)
+        self.assertEqual(group.af_id, 1)
+        self.assertEqual(group.ax_id, 'AF_1')
+        self.assertEqual(group.url, 'https://ax.polytechnique.org/group/GroupeUnit%C3%A9/1')
+        self.assertEqual(group.name, 'Groupe Unité')
+        self.assertEqual(group.category, 'Acteurs de la communauté')
+        self.assertEqual(group.last_update, datetime.date(2001, 2, 3))
+
+        # Import group memberships
+        self.assertEqual(user.group_memberships.count(), 0)
+        self.assertEqual(group.memberships.count(), 0)
+        call_command('importcsv', self.csv_files['groupmembers'], verbosity=0)
+        self.assertEqual(user.group_memberships.count(), 2)
+        self.assertEqual(group.memberships.count(), 1)
+
+        membership = user.group_memberships.get(group=group)
+        self.assertEqual(membership.account, user)
+        self.assertEqual(membership.group, group)
+        self.assertEqual(membership.role, 'member')
+        self.assertEqual(membership.last_update, datetime.date(2001, 2, 3))
