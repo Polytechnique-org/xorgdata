@@ -58,7 +58,7 @@ class Account(models.Model):
 
 
 class AcademicInformation(models.Model):
-    account = models.ForeignKey('Account', on_delete=models.CASCADE)
+    account = models.ForeignKey('Account', related_name='degrees', on_delete=models.CASCADE)
     diploma_reference = UnboundedCharField()
     diplomed = models.NullBooleanField()
     diplomation_date = models.DateField(blank=True, null=True)
@@ -69,7 +69,7 @@ class AcademicInformation(models.Model):
 
 
 class ProfessionnalInformation(models.Model):
-    account = models.ForeignKey('Account', on_delete=models.CASCADE)
+    account = models.ForeignKey('Account', related_name='jobs', on_delete=models.CASCADE)
     title = UnboundedCharField()
     role = UnboundedCharField(blank=True)
     company_name = UnboundedCharField()
@@ -107,7 +107,7 @@ class Group(models.Model):
         return "%s (AF ID %s)" % (self.name, self.af_id)
 
 
-class GroupMemberhip(models.Model):
+class GroupMembership(models.Model):
     # Use memership values defined by Alumnforce
     MEMBERSHIP_ROLES = (
         ('banned', _('banned')),
@@ -118,8 +118,8 @@ class GroupMemberhip(models.Model):
         ('responsible', _('responsible')),
         ('unsubscribed', _('unsubscribed')),
     )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name='group_memberships', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name='memberships', on_delete=models.CASCADE)
     role = models.SlugField(choices=MEMBERSHIP_ROLES)
     last_update = models.DateField()
 

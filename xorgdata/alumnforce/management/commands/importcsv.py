@@ -348,7 +348,7 @@ class Command(BaseCommand):
                             "Unable to find group role {}".format(repr(value['role']))
                         )
                         continue
-                    models.GroupMemberhip.objects.update_or_create(
+                    models.GroupMembership.objects.update_or_create(
                         account=account,
                         group=group,
                         defaults={'role': role, 'last_update': file_date},

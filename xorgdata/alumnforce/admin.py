@@ -20,8 +20,8 @@ class ProfessionnalInformationInline(admin.StackedInline):
     extra = 0
 
 
-class GroupMemberhipInline(admin.TabularInline):
-    model = models.GroupMemberhip
+class GroupMembershipInline(admin.TabularInline):
+    model = models.GroupMembership
     extra = 0
     readonly_fields = ('link_account', 'link_group')
     fields = ('link_account', 'link_group', 'role')
@@ -51,7 +51,7 @@ class AccountAdmin(admin.ModelAdmin):
     inlines = [
         AcademicInformationInline,
         ProfessionnalInformationInline,
-        GroupMemberhipInline,
+        GroupMembershipInline,
     ]
 
 
@@ -62,7 +62,7 @@ class GroupAdmin(admin.ModelAdmin):
     list_display_links = ('af_id', 'ax_id', 'name')
     ordering = ('name', 'af_id')
     inlines = [
-        GroupMemberhipInline,
+        GroupMembershipInline,
     ]
 
 
