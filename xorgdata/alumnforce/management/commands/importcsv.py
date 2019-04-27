@@ -269,6 +269,10 @@ class Command(BaseCommand):
                 num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
                     value['last_update'] = file_date
+                    for key in ('nationality', 'nationality_2', 'nationality_3'):
+                        # Make an unfilled field blank
+                        if value[key] == 'Non renseigné':
+                            value[key] = ''
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
                     num_values += 1
                 self.log_success(file_date, file_kind, num_values, file_path)

@@ -83,8 +83,8 @@ class ImportCsvTests(TestCase):
         self.assertEqual(user.email_1, 'louis.vaneau.1829@polytechnique.org')
         self.assertEqual(user.email_2, 'louis.vaneau.1829+ax@polytechnique.org')
         self.assertEqual(user.nationality, 'France')
-        self.assertEqual(user.nationality_2, 'Non renseigné')  # TODO: make empty
-        self.assertEqual(user.nationality_3, 'Non renseigné')
+        self.assertEqual(user.nationality_2, '')
+        self.assertEqual(user.nationality_3, '')
         self.assertEqual(user.dead, True)
         self.assertEqual(user.deathdate, datetime.date(1830, 7, 29))
         self.assertEqual(user.dead_for_france, '')

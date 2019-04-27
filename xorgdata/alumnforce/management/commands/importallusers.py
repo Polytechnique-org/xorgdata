@@ -96,6 +96,11 @@ class Command(BaseCommand):
                 'newsletter_inscriptions': user_data['newsletters'] or '',
                 'last_update': file_date,
             }
+            for key in ('nationality', 'nationality_2', 'nationality_3'):
+                # Make an unfilled field blank
+                if fields[key] == 'Non renseigné':
+                    fields[key] = ''
+
             if user_data['roles']:
                 # Format the additional roles as a list of integers
                 fields['additional_roles'] = ','.join(user_data['roles'])
