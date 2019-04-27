@@ -83,13 +83,23 @@ class Account(models.Model):
     deleted_since = models.DateField(blank=True, null=True)
 
     def __str__(self):
+        """Get a string identifying an account"""
+        # Start by the X.org ID or names or email
         if self.xorg_id:
-            if self.ax_id:
-                return "%s (AX ID %s)" % (self.xorg_id, self.ax_id)
-            return self.xorg_id
-        elif self.ax_id:
-            return "AX ID %s" % self.ax_id
-        return "AF ID %d" % self.af_id
+            result = self.xorg_id
+        elif self.first_name and self.last_name:
+            result = '{} {}'.format(self.first_name, self.last_name)
+        elif self.email_1:
+            result = self.email_1
+        else:
+            result = '?'
+
+        # Add the AX ID or the AF ID
+        if self.ax_id:
+            result += ' (AX ID {})'.format(self.ax_id)
+        else:
+            result += ' (AF ID {})'.format(self.af_id)
+        return result
 
     def get_additional_roles(self):
         """Return the additional roles as a list of integers"""
