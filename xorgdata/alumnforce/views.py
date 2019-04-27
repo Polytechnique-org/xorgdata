@@ -9,7 +9,8 @@ from xorgdata.alumnforce import models
 class SummaryView(TemplateView):
     template_name = 'xorgdata/summary.html'
 
-    def last_logs_by_kind(self):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         """Get the last logs from the database, for each defined kind"""
         last_logs = []
         for kind, _kind_name in models.ImportLog.KNOWN_EXPORT_KINDS:
@@ -18,7 +19,8 @@ class SummaryView(TemplateView):
                 last_logs.append(qs[:1].get())
             except models.ImportLog.DoesNotExist:
                 pass
-        return last_logs
+        context['last_logs_by_kind'] = last_logs
+        return context
 
 
 class IssuesView(UserPassesTestMixin, TemplateView):

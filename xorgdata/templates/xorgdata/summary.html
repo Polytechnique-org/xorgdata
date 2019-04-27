@@ -132,7 +132,7 @@
                 <img alt="Polytechnique.org" src="{% static 'logo-xorg-circle.png' %}">
             </a>
             <table style="width: 100%;">
-            {% for log_obj in view.last_logs_by_kind %}
+            {% for log_obj in last_logs_by_kind %}
                 <tr>
                     <td class="export-kind">{{ log_obj.get_export_kind_display }}</td>
                     <td class="export-result">{{ log_obj.get_error_display }} on {{ log_obj.date|date:"Y-m-d" }}</td>
