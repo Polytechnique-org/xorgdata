@@ -79,3 +79,4 @@ class GroupAdmin(admin.ModelAdmin):
 @admin.register(models.ImportLog)
 class ImportLogAdmin(admin.ModelAdmin):
     list_display = ('date', 'export_kind', 'is_incremental', 'error', 'num_modified', 'message')
+    ordering = ('-date', 'export_kind')
