@@ -269,6 +269,7 @@ class Command(BaseCommand):
                 num_values = 0
                 for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
                     value['last_update'] = file_date
+                    value['deleted_since'] = None
                     for key in ('nationality', 'nationality_2', 'nationality_3'):
                         # Make an unfilled field blank
                         if value[key] == 'Non renseigné':

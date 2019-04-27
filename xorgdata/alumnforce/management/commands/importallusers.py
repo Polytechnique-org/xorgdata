@@ -49,10 +49,14 @@ class Command(BaseCommand):
             if not file_date:
                 raise CommandError("Unable to find a date in file path %r" % file_path)
 
+        # Track users in order to find out those which have been deleted
+        deleted_account_ids = set(account.af_id for account in models.Account.objects.filter(deleted_since=None))
+
         # Import the file as a JSON structure
         json_obj = AlumnForceDataC2J.import_csv_file(file_path, keep_empty=True)
         for user_data in json_obj.content:
             # Prepare a dict for insertion into the Django database
+            af_id = user_data['id_af']
             fields = {
                 'ax_id': user_data['id_ax'] or None,
                 'first_name': user_data['first_name'],
@@ -95,6 +99,7 @@ class Command(BaseCommand):
                 'mail_reception': user_data['has_postal_mail'],
                 'newsletter_inscriptions': ','.join(user_data['newsletters'] or []),
                 'last_update': file_date,
+                'deleted_since': None,
             }
             for key in ('nationality', 'nationality_2', 'nationality_3'):
                 # Make an unfilled field blank
@@ -104,10 +109,19 @@ class Command(BaseCommand):
             if user_data['roles']:
                 # Format the additional roles as a list of integers
                 fields['additional_roles'] = ','.join(user_data['roles'])
-            models.Account.objects.update_or_create(af_id=user_data['id_af'], defaults=fields)
+            models.Account.objects.update_or_create(af_id=af_id, defaults=fields)
+            if af_id in deleted_account_ids:
+                deleted_account_ids.remove(af_id)
 
         num_users = len(json_obj.content)
         message = "Loaded {} values from full export {}".format(num_users, repr(file_path))
+
+        if deleted_account_ids:
+            message += " ({} deleted users)".format(len(deleted_account_ids))
+            for account in models.Account.objects.filter(af_id__in=deleted_account_ids):
+                account.deleted_since = file_date
+                account.save()
+
         self.stdout.write(self.style.SUCCESS(message))
         models.ImportLog.objects.create(
             date=file_date,

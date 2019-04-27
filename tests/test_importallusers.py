@@ -15,20 +15,24 @@ class ImportAllUsersTests(TestCase):
         csv_dirpath = Path(__file__).parent / 'files'
         self.csv_file = csv_dirpath / 'export-users-20010203-040506.csv'
 
-    def test_import_all_users(self):
-        out = StringIO()
-        call_command('importallusers', self.csv_file, stdout=out)
+    @staticmethod
+    def count_error_lines_from_stdout(out):
         num_error_lines = 0
         for out_line in out.getvalue().splitlines():
             # Remove color escape sequences
             line = out_line.replace('\x1b[32;1m', '').replace('\x1b[0m', '')
-            if re.match(r"^Loaded 2 values from full export '.*'$", line):
+            if re.match(r"^Loaded 2 values from full export '", line):
                 continue
             else:  # pragma: no cover
                 # Display the errors
                 num_error_lines += 1
                 print(out_line)
-        self.assertEqual(num_error_lines, 0)
+        return num_error_lines
+
+    def test_import_all_users(self):
+        out = StringIO()
+        call_command('importallusers', self.csv_file, stdout=out)
+        self.assertEqual(self.count_error_lines_from_stdout(out), 0)
 
         # Ensure the loaded data is correct
         user = Account.objects.get(af_id=1)
@@ -124,3 +128,20 @@ class ImportAllUsersTests(TestCase):
         self.assertEqual(user.profile_picture_url, '')
         self.assertEqual(user.last_update, datetime.date(2001, 2, 3))
         self.assertEqual(user.deleted_since, None)
+
+    def test_delete_user(self):
+        # Create a user which will be destroyed
+        account = Account.objects.create(
+            af_id=123456,
+            user_kind=1,
+            last_update=datetime.date(2001, 2, 3))
+        self.assertEqual(account.deleted_since, None)
+
+        # Load exported data
+        out = StringIO()
+        call_command('importallusers', self.csv_file, stdout=out)
+        self.assertEqual(self.count_error_lines_from_stdout(out), 0)
+
+        # Check whether the account has been marked as deleted
+        account.refresh_from_db()
+        self.assertEqual(account.deleted_since, datetime.date(2001, 2, 3))

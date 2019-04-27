@@ -53,9 +53,13 @@ class Account(models.Model):
     deleted_since = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        if self.ax_id:
-            return "%s (AX ID %s)" % (self.xorg_id, self.ax_id)
-        return self.xorg_id
+        if self.xorg_id:
+            if self.ax_id:
+                return "%s (AX ID %s)" % (self.xorg_id, self.ax_id)
+            return self.xorg_id
+        elif self.ax_id:
+            return "AX ID %s" % self.ax_id
+        return "AF ID %d" % self.af_id
 
 
 class AcademicInformation(models.Model):
