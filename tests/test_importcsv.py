@@ -121,7 +121,7 @@ class ImportCsvTests(TestCase):
         self.assertEqual(user.binets, 'Binet Escrime')
         self.assertEqual(user.mail_reception, '')
         self.assertEqual(user.newsletter_inscriptions, 'Lettre mensuelle de Polytechnique.org,Lettre de la communauté')
-        self.assertEqual(user.profile_picture_url, '/medias/profile/42.jpeg')
+        self.assertEqual(user.profile_picture_url, 'https://ax.polytechnique.org/medias/profile/42.jpeg')
         self.assertEqual(user.last_update, datetime.date(2001, 2, 3))
 
         # Import its studies and test the result

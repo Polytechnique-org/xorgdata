@@ -273,6 +273,8 @@ class Command(BaseCommand):
                         # Make an unfilled field blank
                         if value[key] == 'Non renseigné':
                             value[key] = ''
+                    if value['profile_picture_url'].startswith('/'):
+                        value['profile_picture_url'] = 'https://ax.polytechnique.org' + value['profile_picture_url']
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
                     num_values += 1
                 self.log_success(file_date, file_kind, num_values, file_path)
