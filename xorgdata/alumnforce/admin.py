@@ -45,6 +45,7 @@ class AccountAdmin(admin.ModelAdmin):
     search_fields = ('ax_id', 'xorg_id', 'first_name', 'last_name', 'common_name')
     list_display = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name', 'deleted_since')
     list_display_links = ('af_id', 'ax_id', 'xorg_id', 'first_name', 'last_name')
+    readonly_fields = ('kind_desc', 'roles_desc')
     ordering = ('-ax_id', 'xorg_id', 'af_id')
 
     inlines = [
@@ -52,6 +53,18 @@ class AccountAdmin(admin.ModelAdmin):
         ProfessionnalInformationInline,
         GroupMembershipInline,
     ]
+
+    def kind_desc(self, obj):
+        """Get the description of account kind"""
+        return "{} [{}]".format(models.Account.KINDS.get(obj.user_kind, '?'), obj.user_kind)
+
+    kind_desc.short_description = _("Account kind")
+
+    def roles_desc(self, obj):
+        """Get the description of account additional roles"""
+        return ', '.join("{} [{}]".format(models.Account.ROLES.get(r, '?'), r) for r in obj.get_addtional_roles())
+
+    roles_desc.short_description = _("Additional roles")
 
 
 @admin.register(models.Group)
