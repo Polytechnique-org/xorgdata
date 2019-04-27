@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) Polytechnique.org
 # This code is distributed under the Affero General Public License version 3
-
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
@@ -58,12 +57,23 @@ class AccountAdmin(admin.ModelAdmin):
 @admin.register(models.Group)
 class GroupAdmin(admin.ModelAdmin):
     search_fields = ('af_id', 'name', 'category')
-    list_display = ('af_id', 'ax_id', 'name', 'category', 'url')
+    list_display = ('af_id', 'ax_id', 'name', 'count_members', 'category', 'url')
     list_display_links = ('af_id', 'ax_id', 'name')
+    readonly_fields = ('url_link', )
     ordering = ('name', 'af_id')
     inlines = [
         GroupMembershipInline,
     ]
+
+    def count_members(self, obj):
+        return obj.memberships.filter(role__in=models.GroupMembership.IN_GROUP_ROLES).count()
+
+    count_members.short_description = _("members")
+
+    def url_link(self, obj):
+        return format_html('<a href="{0}">{0}</a>', obj.url)
+
+    count_members.short_description = _("URL link")
 
 
 @admin.register(models.ImportLog)

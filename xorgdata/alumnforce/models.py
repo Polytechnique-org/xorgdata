@@ -118,6 +118,8 @@ class GroupMembership(models.Model):
         ('responsible', _('responsible')),
         ('unsubscribed', _('unsubscribed')),
     )
+    # Roles that really mean that the user belongs to the group
+    IN_GROUP_ROLES = frozenset(('member', 'moderator', 'onlist', 'responsible'))
     account = models.ForeignKey(Account, related_name='group_memberships', on_delete=models.CASCADE)
     group = models.ForeignKey(Group, related_name='memberships', on_delete=models.CASCADE)
     role = models.SlugField(choices=MEMBERSHIP_ROLES)
