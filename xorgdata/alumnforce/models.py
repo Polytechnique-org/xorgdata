@@ -24,6 +24,7 @@ class Account(models.Model):
     # Roles defined by the AX
     ROLES = {
         1: "Visiteur",
+        2: "Super-administrateur",
         3: "Administrateur total",
         4: "Diplômé",
         5: "Cotisant",
