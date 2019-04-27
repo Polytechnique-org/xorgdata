@@ -123,6 +123,7 @@ class ImportCsvTests(TestCase):
         self.assertEqual(user.newsletter_inscriptions, 'Lettre mensuelle de Polytechnique.org,Lettre de la communauté')
         self.assertEqual(user.profile_picture_url, 'https://ax.polytechnique.org/medias/profile/42.jpeg')
         self.assertEqual(user.last_update, datetime.date(2001, 2, 3))
+        self.assertEqual(user.deleted_since, None)
 
         # Import its studies and test the result
         self.assertEqual(user.degrees.count(), 0)

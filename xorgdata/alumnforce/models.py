@@ -50,6 +50,7 @@ class Account(models.Model):
     newsletter_inscriptions = UnboundedCharField(blank=True)
     profile_picture_url = UnboundedCharField(blank=True)
     last_update = models.DateField()
+    deleted_since = models.DateField(blank=True, null=True)
 
     def __str__(self):
         if self.ax_id:

@@ -91,9 +91,9 @@ class Command(BaseCommand):
                 'corps_grade': user_data['corps']['grade'],
                 'nickname': user_data['nickname'],
                 'sport_section': user_data['school']['sport'],
-                'binets': user_data['school']['binets'] or '',
+                'binets': ','.join(user_data['school']['binets'] or []),
                 'mail_reception': user_data['has_postal_mail'],
-                'newsletter_inscriptions': user_data['newsletters'] or '',
+                'newsletter_inscriptions': ','.join(user_data['newsletters'] or []),
                 'last_update': file_date,
             }
             for key in ('nationality', 'nationality_2', 'nationality_3'):
