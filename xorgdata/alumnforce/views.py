@@ -33,7 +33,7 @@ class IssuesView(UserPassesTestMixin, TemplateView):
         account_issues = []
 
         if account.civility not in ('', 'Mme', 'M'):
-            account_issues.append("Unknown civility{}".format(repr(account.civility)))
+            account_issues.append("Unknown civility {}".format(repr(account.civility)))
 
         if account.user_kind not in models.Account.KINDS:
             account_issues.append("Unknown account kind {}".format(account.user_kind))
@@ -62,7 +62,7 @@ class IssuesView(UserPassesTestMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         issues = []
-        for account in models.Account.objects.all():
+        for account in models.Account.objects.filter(deleted_since=None):
             account_issues = self.find_issues(account)
             if account_issues:
                 issues.append({

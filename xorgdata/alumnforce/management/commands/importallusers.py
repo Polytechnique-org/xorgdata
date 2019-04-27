@@ -101,6 +101,10 @@ class Command(BaseCommand):
                 'last_update': file_date,
                 'deleted_since': None,
             }
+            if fields['civility'] == 'M.':
+                # Normalize civility, in order to share the same format as incremental exports
+                fields['civility'] = 'M'
+
             for key in ('nationality', 'nationality_2', 'nationality_3'):
                 # Make an unfilled field blank
                 if fields[key] == 'Non renseigné':
