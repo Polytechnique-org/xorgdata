@@ -43,7 +43,7 @@ class IssuesView(UserPassesTestMixin, TemplateView):
         try:
             account_roles = account.get_additional_roles()
         except ValueError:
-            account_issues.append("Invalid additional roles value: {}".format(repr(account.additional_roles)))
+            account_issues.append("Invalid additional roles value {}".format(repr(account.additional_roles)))
         else:
             for role in account_roles:
                 if role not in models.Account.ROLES:
@@ -59,6 +59,13 @@ class IssuesView(UserPassesTestMixin, TemplateView):
                 account_issues.append("Missing X.org ID for graduated")
             elif account.user_kind == models.Account.KIND_STUDENT:
                 account_issues.append("Missing X.org ID for student")
+
+        # Verify email addresses against a simple regular expression
+        email_regexp = re.compile(r'^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+$')
+        if account.email_1 and not email_regexp.match(account.email_1):
+            account_issues.append("Invalid email address 1 {}".format(repr(account.email_1)))
+        if account.email_2 and not email_regexp.match(account.email_2):
+            account_issues.append("Invalid email address 2 {}".format(repr(account.email_2)))
         return account_issues
 
     def get_context_data(self, **kwargs):
