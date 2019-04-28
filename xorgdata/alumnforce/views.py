@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.db.models import Count
 from django.views.generic import TemplateView
 
 from xorgdata.alumnforce import models
@@ -70,9 +71,54 @@ class IssuesView(UserPassesTestMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Find accounts with duplicate IDs
+        duplicated_ax_id = {
+            row['ax_id']: row['count']
+            for row in models.Account.objects
+            .filter(deleted_since=None)
+            .exclude(ax_id=None)
+            .values('ax_id')
+            .annotate(count=Count('af_id'))
+            .filter(count__gt=1)
+        }
+        duplicated_xorg_id = {
+            row['xorg_id']: row['count']
+            for row in models.Account.objects
+            .filter(deleted_since=None)
+            .exclude(xorg_id=None)
+            .values('xorg_id')
+            .annotate(count=Count('af_id'))
+            .filter(count__gt=1)
+        }
+        duplicated_school_id = {
+            row['school_id']: row['count']
+            for row in models.Account.objects
+            .filter(deleted_since=None)
+            .exclude(school_id='')
+            .values('school_id')
+            .annotate(count=Count('af_id'))
+            .filter(count__gt=1)
+        }
+
         issues = []
         for account in models.Account.objects.filter(deleted_since=None):
             account_issues = self.find_issues(account)
+            dup_count = duplicated_ax_id.get(account.ax_id)
+            if dup_count is not None:
+                account_issues.append("Duplicated AX ID {}, shared with {} accounts".format(
+                    repr(account.ax_id), dup_count))
+
+            dup_count = duplicated_xorg_id.get(account.xorg_id)
+            if dup_count is not None:
+                account_issues.append("Duplicated X.org ID {}, shared with {} accounts".format(
+                    repr(account.xorg_id), dup_count))
+
+            dup_count = duplicated_school_id.get(account.school_id)
+            if dup_count is not None:
+                account_issues.append("Duplicated school ID {}, shared with {} accounts".format(
+                    repr(account.school_id), dup_count))
+
             if account_issues:
                 issues.append({
                     'account': account,
