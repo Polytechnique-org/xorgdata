@@ -45,8 +45,10 @@
             float: left;
         }
         .xorg-logo {
-            border-radius: 50%;
             float: right;
+        }
+        .xorg-logo img {
+            border-radius: 50%;
         }
         .ax-logo, .xorg-logo {
             animation: logo-animation 3s linear infinite;
@@ -144,7 +146,7 @@
                 <img alt="AX" src="{% static 'logo-ax.png' %}">
             </a>
             <a class="xorg-logo" href="https://www.polytechnique.org/">
-                <img alt="Polytechnique.org" src="{% static 'logo-xorg-circle.png' %}">
+                <img alt="Polytechnique.org" src="{% static 'logo-xorg-for-circle.png' %}">
             </a>
             <table style="width: 100%;">
             {% for log_obj in last_logs_by_kind %}
