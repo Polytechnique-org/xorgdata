@@ -207,3 +207,8 @@ ALUMNFORCE_FTP_USER = config.getstr("alumnforce_ftp.user")
 ALUMNFORCE_FTP_PASSWORD = config.getstr("alumnforce_ftp.password")
 ALUMNFORCE_FTP_REMOTE_DIRECTORY = config.getstr("alumnforce_ftp.remote_directory", "export")
 ALUMNFORCE_FTP_LOCAL_DIRECTORY = config.getstr("alumnforce_ftp.local_directory", "/tmp/xorgdata-download")
+
+# Settings for the xorgauth API which receives data
+XORGAUTH_HOST = config.getstr("xorgauth.host", "auth.polytechnique.org")
+XORGAUTH_SERVICENAME = config.getstr("xorgauth.servicename", "xorgdata")
+XORGAUTH_PASSWORD = config.getstr("xorgauth.password")
