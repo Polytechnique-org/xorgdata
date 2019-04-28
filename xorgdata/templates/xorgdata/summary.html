@@ -1,16 +1,10 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
-    <link rel="icon" href="{% static 'favicon.png' %}" type="image/png">
-    <link rel="apple-touch-icon" href="{% static 'favicon.png' %}" type="image/png">
-
-    <title>X.org Data synchronization summary</title>
+{% block title %}
+X.org Data synchronization summary
+{% endblock %}
+{% block head_content %}
     <style type="text/css"><!--
         a {
             text-decoration: none;
@@ -136,8 +130,8 @@
             z-index: -2;
         }
     --></style>
-</head>
-<body>
+{% endblock %}
+{% block body_content %}
     <div class="xorg-spinner">
         <div class="spinner-inner">
             <div class="spinner-line"></div>
@@ -161,5 +155,4 @@
     <a href="https://github.com/Polytechnique-org/xorgdata/issues" class="xorg-ribbon">
         Report issues on GitHub
     </a>
-</body>
-</html>
+{% endblock %}

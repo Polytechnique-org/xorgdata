@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% extends 'base.html' %}
 
-    <title>X.org Data issues</title>
+{% block title %}
+X.org Data issues
+{% endblock %}
+{% block head_content %}
     <style type="text/css"><!--
         a {
             text-decoration: none;
@@ -15,8 +13,8 @@
             text-decoration: underline;
         }
     --></style>
-</head>
-<body>
+{% endblock %}
+{% block body_content %}
     <h1>Issues found in AX database</h1>
     <p>Issues need to be fixed in <a href="https://ax.polytechnique.org/profile/manager/index">AX's website</a>.</p>
     <table width="100%" border="1">
@@ -41,5 +39,4 @@
         </tr>
         {% endfor %}
     </table>
-</body>
-</html>
+{% endblock %}
