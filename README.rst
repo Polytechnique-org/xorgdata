@@ -4,8 +4,8 @@ xorgdata
 .. image:: https://secure.travis-ci.org/Polytechnique-org/xorgdata.png?branch=master
     :target: http://travis-ci.org/Polytechnique-org/xorgdata/
 
-xorgdata handles the central data store for Polytechnique.org services
-
+xorgdata handles the central data store for Polytechnique.org services.
+It pulls data from AX's website and pushes it to Polytechnique.org's services.
 
 .. note::
 
@@ -36,3 +36,15 @@ Here are some commands to set up a development environment:
 
     # Create a superuser to access the database through Django /admin web interface
     python manage.py createsuperuser
+
+Custom Django management commands
+---------------------------------
+
+This project uses the following custom commands:
+
+* `manage.py importcsv file.csv`: import a file that is provided by AX's contractor (AlumnForce).
+  Such a file consists in an incremental update of the alumni directory.
+* `manage.py afsync`: fetch and import incremental updates from AlumnForce's server.
+  This command is suited to be run in a scheduled task (aka. a cron job).
+* `manage.py importallusers file.csv`: import a file that has been exported from AX's website (https://ax.polytechnique.org).
+  Such a file contains data for all the users of the directory.
