@@ -149,7 +149,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Use Django admin for authentication
-LOGIN_URL = '/admin/login'
+LOGIN_URL = '/admin/login/'
 
 
 # Internationalization
