@@ -274,6 +274,10 @@ class Command(BaseCommand):
                         # Make an unfilled field blank
                         if value[key] == 'Non renseigné':
                             value[key] = ''
+                    if value['school_id'] == '0':
+                        value['school_id'] = ''
+                    if value['xorg_id'] == '':
+                        value['xorg_id'] = None
                     if value['profile_picture_url'].startswith('/'):
                         value['profile_picture_url'] = 'https://ax.polytechnique.org' + value['profile_picture_url']
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)

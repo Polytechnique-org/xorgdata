@@ -104,6 +104,9 @@ class Command(BaseCommand):
             if fields['civility'] == 'M.':
                 # Normalize civility, in order to share the same format as incremental exports
                 fields['civility'] = 'M'
+            if fields['school_id'] == '0':
+                # Normalize school ID
+                fields['school_id'] = ''
 
             for key in ('nationality', 'nationality_2', 'nationality_3'):
                 # Make an unfilled field blank
