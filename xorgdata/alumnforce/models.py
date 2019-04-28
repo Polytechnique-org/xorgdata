@@ -22,18 +22,29 @@ class Account(models.Model):
         KIND_WIDOW: "Veuves/Veufs",
     }
     # Roles defined by the AX
+    ROLE_GUEST = 1
+    ROLE_SUPER_ADMIN = 2
+    ROLE_TOTAL_ADMIN = 3
+    ROLE_GRADUATED = 4
+    ROLE_CONTRIBUTOR = 5
+    ROLE_STUDENT = 7
+    ROLE_SUBSCRIBED = 17
+    ROLE_ASSOCIATED_MEMBER = 19
+    ROLE_CONTENT_ADMIN = 21
+    ROLE_ACCOUNTING_ADMIN = 22
+    ROLE_WIDOW = 26
     ROLES = {
-        1: "Visiteur",
-        2: "Super-administrateur",
-        3: "Administrateur total",
-        4: "Diplômé",
-        5: "Cotisant",
-        7: "Élève et étudiant",
-        17: "Abonné",
-        19: "Membre associé",
-        21: "Administrateur contenu",
-        22: "Administrateur comptable",
-        26: "Veuves/Veufs",
+        ROLE_GUEST: "Visiteur",
+        ROLE_SUPER_ADMIN: "Super-administrateur",
+        ROLE_TOTAL_ADMIN: "Administrateur total",
+        ROLE_GRADUATED: "Diplômé",
+        ROLE_CONTRIBUTOR: "Cotisant",
+        ROLE_STUDENT: "Élève et étudiant",
+        ROLE_SUBSCRIBED: "Abonné",
+        ROLE_ASSOCIATED_MEMBER: "Membre associé",
+        ROLE_CONTENT_ADMIN: "Administrateur contenu",
+        ROLE_ACCOUNTING_ADMIN: "Administrateur comptable",
+        ROLE_WIDOW: "Veuves/Veufs",
     }
 
     af_id = models.IntegerField(primary_key=True)
