@@ -17,16 +17,16 @@ TEST_CSV_FILES = (
     ('groups', 'exportgroups-afbo-Polytechnique-X-20010203.csv'),
     ('groupmembers', 'exportgroupmembers-afbo-Polytechnique-X-20010203.csv'),
 )
+TEST_CSV_PATHS = collections.OrderedDict(
+    (kind, Path(__file__).parent / 'files' / file_name)
+    for kind, file_name in TEST_CSV_FILES
+)
 
 
 class ImportCsvTests(TestCase):
     """Test importing several CSV files"""
-    def setUp(self):
-        csv_dirpath = Path(__file__).parent / 'files'
-        self.csv_files = collections.OrderedDict((kind, csv_dirpath / file_name) for kind, file_name in TEST_CSV_FILES)
-
     def test_importcsv_verbose(self):
-        for kind, file_path in self.csv_files.items():
+        for kind, file_path in TEST_CSV_PATHS.items():
             out = StringIO()
             call_command('importcsv', file_path, stdout=out)
             num_error_lines = 0
@@ -51,13 +51,13 @@ class ImportCsvTests(TestCase):
             self.assertNotEqual(import_log.message, '')
 
     def test_importcsv_quiet(self):
-        for file_path in self.csv_files.values():
+        for file_path in TEST_CSV_PATHS.values():
             out = StringIO()
             call_command('importcsv', file_path, stdout=out, verbosity=0)
             self.assertEqual(out.getvalue(), '')
 
     def test_importcsv_with_kind(self):
-        for kind, file_path in self.csv_files.items():
+        for kind, file_path in TEST_CSV_PATHS.items():
             out = StringIO()
             call_command('importcsv', '--kind=' + kind, file_path, stdout=out, verbosity=0)
             self.assertEqual(out.getvalue(), '')
@@ -77,7 +77,7 @@ class ImportCsvTests(TestCase):
         self.assertEqual(Account.objects.filter(af_id=1).count(), 0)
 
         # Import the test user and test the result
-        call_command('importcsv', self.csv_files['users'], verbosity=0)
+        call_command('importcsv', TEST_CSV_PATHS['users'], verbosity=0)
         user = Account.objects.get(af_id=1)
         self.assertIsNotNone(user)
         self.assertEqual(user.af_id, 1)
@@ -127,7 +127,7 @@ class ImportCsvTests(TestCase):
 
         # Import its studies and test the result
         self.assertEqual(user.degrees.count(), 0)
-        call_command('importcsv', self.csv_files['userdegrees'], verbosity=0)
+        call_command('importcsv', TEST_CSV_PATHS['userdegrees'], verbosity=0)
         user.refresh_from_db()
         self.assertEqual(user.degrees.count(), 1)
         user_degree = user.degrees.all()[0]
@@ -142,7 +142,7 @@ class ImportCsvTests(TestCase):
 
         # Import its jobs and test the result
         self.assertEqual(user.jobs.count(), 0)
-        call_command('importcsv', self.csv_files['userjobs'], verbosity=0)
+        call_command('importcsv', TEST_CSV_PATHS['userjobs'], verbosity=0)
         user.refresh_from_db()
         self.assertEqual(user.jobs.count(), 2)
         user_job = user.jobs.all()[0]
@@ -202,8 +202,8 @@ class ImportCsvTests(TestCase):
         self.assertEqual(Account.objects.filter(xorg_id='louis.vaneau.1829').count(), 0)
         self.assertEqual(Account.objects.filter(af_id=1).count(), 0)
         self.assertEqual(Group.objects.filter(af_id=1).count(), 0)
-        call_command('importcsv', self.csv_files['users'], verbosity=0)
-        call_command('importcsv', self.csv_files['groups'], verbosity=0)
+        call_command('importcsv', TEST_CSV_PATHS['users'], verbosity=0)
+        call_command('importcsv', TEST_CSV_PATHS['groups'], verbosity=0)
         user = Account.objects.get(af_id=1)
         self.assertIsNotNone(user)
         group = Group.objects.get(af_id=1)
@@ -218,7 +218,7 @@ class ImportCsvTests(TestCase):
         # Import group memberships
         self.assertEqual(user.group_memberships.count(), 0)
         self.assertEqual(group.memberships.count(), 0)
-        call_command('importcsv', self.csv_files['groupmembers'], verbosity=0)
+        call_command('importcsv', TEST_CSV_PATHS['groupmembers'], verbosity=0)
         self.assertEqual(user.group_memberships.count(), 2)
         self.assertEqual(group.memberships.count(), 1)
 
