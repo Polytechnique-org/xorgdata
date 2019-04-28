@@ -40,7 +40,7 @@ setup(
 
     python_requires='>=3.4.2',
     install_requires=[
-        'Django>=2.0',
+        'Django>=2.0,<2.3',
         'getconf',
     ],
     setup_requires=[
