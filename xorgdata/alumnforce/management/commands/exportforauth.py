@@ -1,4 +1,5 @@
 import json
+import urllib.request
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -52,4 +53,19 @@ class Command(BaseCommand):
 
         if not settings.XORGAUTH_PASSWORD:
             raise CommandError("Unable to push: XORGDATA_XORGAUTH_PASSWORD is not defined")
-        # TODO Implement Xorgdata API...
+
+        req = urllib.request.Request(
+            'https://{}/sync/axdata'.format(settings.XORGAUTH_HOST),
+            data=json.dumps({
+                'secret': settings.XORGAUTH_PASSWORD,
+                'data': exported_data,
+            }).encode('ascii'),
+            headers={
+                'Content-type': 'application/json',
+            },
+        )
+        opener = urllib.request.build_opener()
+        try:
+            opener.open(req)
+        except urllib.error.HTTPError as exc:
+            raise CommandError("HTTP error %d when trying to push data" % exc.code)
