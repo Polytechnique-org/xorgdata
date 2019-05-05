@@ -40,6 +40,7 @@ class Command(BaseCommand):
                 'af_id': account.af_id,
                 'ax_contributor': models.Account.ROLE_CONTRIBUTOR in roles,
                 'axjr_subscribed': models.Account.ROLE_SUBSCRIBED in roles,
+                'last_updated': account.last_update.strftime('%Y-%m-%d')
             }
 
         exported_data = [export_account(account) for account in accounts_qs]

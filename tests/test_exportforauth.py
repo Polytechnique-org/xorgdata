@@ -25,6 +25,7 @@ class ExportForAuthTests(TestCase):
                 'af_id': 1,
                 'ax_contributor': False,
                 'axjr_subscribed': False,
+                'last_updated': '2001-02-03',
             }
         ])
 
