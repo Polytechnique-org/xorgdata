@@ -54,18 +54,21 @@ class Command(BaseCommand):
         if not settings.XORGAUTH_PASSWORD:
             raise CommandError("Unable to push: XORGDATA_XORGAUTH_PASSWORD is not defined")
 
-        req = urllib.request.Request(
-            'https://{}/sync/axdata'.format(settings.XORGAUTH_HOST),
-            data=json.dumps({
-                'secret': settings.XORGAUTH_PASSWORD,
-                'data': exported_data,
-            }).encode('ascii'),
-            headers={
-                'Content-type': 'application/json',
-            },
-        )
-        opener = urllib.request.build_opener()
-        try:
-            opener.open(req)
-        except urllib.error.HTTPError as exc:
-            raise CommandError("HTTP error %d when trying to push data" % exc.code)
+        # Paginate the data by defining a number of account to send for each batch
+        page_size = 2000
+        for page_offset in range(0, len(exported_data), page_size):
+            req = urllib.request.Request(
+                'https://{}/sync/axdata'.format(settings.XORGAUTH_HOST),
+                data=json.dumps({
+                    'secret': settings.XORGAUTH_PASSWORD,
+                    'data': exported_data[page_offset:page_offset + page_size],
+                }).encode('ascii'),
+                headers={
+                    'Content-type': 'application/json',
+                },
+            )
+            opener = urllib.request.build_opener()
+            try:
+                opener.open(req)
+            except urllib.error.HTTPError as exc:
+                raise CommandError("HTTP error %d when trying to push data: %r" % (exc.code, exc))
