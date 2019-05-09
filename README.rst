@@ -44,7 +44,7 @@ This project uses the following custom commands:
 
 * `manage.py importcsv file.csv`: import a file that is provided by AX's contractor (AlumnForce).
   Such a file consists in an incremental update of the alumni directory.
-* `manage.py afsync`: fetch and import incremental updates from AlumnForce's server.
+* `manage.py afsync --push-export`: fetch and import incremental updates from AlumnForce's server. If successful, export the imported data to xorgauth.
   This command is suited to be run in a scheduled task (aka. a cron job).
 * `manage.py importallusers file.csv`: import a file that has been exported from AX's website (https://ax.polytechnique.org).
   Such a file contains data for all the users of the directory.

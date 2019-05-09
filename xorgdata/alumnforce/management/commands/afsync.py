@@ -73,6 +73,8 @@ class Command(BaseCommand):
                             help="show the files that would be applied, without updating anything")
         parser.add_argument('--verbose', action='store_true',
                             help="show what is done")
+        parser.add_argument('--push-export', action='store_true',
+                            help="export and and push it to Polytechnique.org's consumers")
 
     def handle(self, *args, **options):
         last_update_dates = get_last_update_by_kind()
@@ -151,3 +153,6 @@ class Command(BaseCommand):
                     call_command('importcsv', dl_filepath, kind=kind, verbosity=0)
 
                 dl_filepath.unlink()
+
+        if options['push_export']:
+            call_command('exportforauth', push=True)
