@@ -104,7 +104,7 @@ ALUMNFORCE_FIELDS = (
     ("Statut (Non enregistré [0] / En cours d'activation [1] / Compte bloqué [2] / Compte activé [3] / Clé d'activation envoyée [4] / En attente de validation [5] / Ne souhaite pas activer son compte [6] / Compte expiré [8])", 'account_status', None),  # noqa
     ('Compte activé (Oui [1] / Non [0])', 'is_activated', BoolType),
     ("Type utilisateur (Diplômé(e) [1] / Personnel de l'association [3] / Élève / étudiant(e) [5] / Visiteur [7] / Membre associé [9] / Veuves/Veufs [10])", 'user_kind', None),  # noqa
-    ('Rôle supplémentaire (Visiteur [1] / Administrateur total [3] / Diplômé [4] / Cotisant [5] / Élève et étudiant [7] / Abonné [17] / Membre associé [19] / Administrateur contenu [21] / Administrateur comptable [22] / Veuves/Veufs [26] /  [27])', 'roles', CommaListType),  # noqa
+    ('Rôle supplémentaire (Visiteur [1] / Administrateur total [3] / Diplômé [4] / Cotisant [5] / Élève et étudiant [7] / Abonné [17] / Membre associé [19] / Administrateur contenu [21] / Administrateur comptable [22] / Veuves/Veufs [26])', 'roles', CommaListType),  # noqa
     ('Forcer le statut de cotisant (Oui [1] / Non [0])', 'force_contributor', BoolType),
     ('Référence du diplôme', 'school.degree_ref', None),
     ('Ecole', 'school.name', None),
