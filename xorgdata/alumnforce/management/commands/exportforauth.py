@@ -1,3 +1,4 @@
+import datetime
 import json
 import urllib.request
 
@@ -72,3 +73,12 @@ class Command(BaseCommand):
                 opener.open(req)
             except urllib.error.HTTPError as exc:
                 raise CommandError("HTTP error %d when trying to push data: %r" % (exc.code, exc))
+
+        # Log that the export cas successful
+        models.ExportLog.objects.create(
+            date=datetime.now(),
+            export_kind=models.ExportLog.KIND_AUTH,
+            error=models.ImportLog.SUCCESS,
+            num_items=len(exported_data),
+            message="Sent {} accounts to {}".format(len(exported_data), settings.XORGAUTH_HOST),
+        )

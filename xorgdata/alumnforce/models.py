@@ -222,3 +222,19 @@ class ImportLog(models.Model):
     error = models.IntegerField(choices=ERROR_CODES)
     num_modified = models.IntegerField(null=True, blank=True)
     message = UnboundedCharField(blank=True)
+
+
+class ExportLog(models.Model):
+    KIND_AUTH = 'auth'
+    KNOWN_KINDS = (
+        (KIND_AUTH, _('X.org auth')),
+    )
+    SUCCESS = 0
+    ERROR_CODES = (
+        (SUCCESS, _('success')),
+    )
+    date = models.DateField()
+    export_kind = models.SlugField(choices=KNOWN_KINDS)
+    error = models.IntegerField(choices=ERROR_CODES)
+    num_items = models.IntegerField(null=True, blank=True)
+    message = UnboundedCharField(blank=True)
