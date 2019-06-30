@@ -211,7 +211,8 @@ def load_csv(csv_file_path, fields):
                 continue
 
             assert len(row) == len(header_row), \
-                "The CSV line {} has a different length from the header".format(reader.line_num)
+                "The CSV line {} has a different length from the header ({} != {})".format(
+                    reader.line_num, len(row), len(header_row))
             # convert the values as appropriate
             row = [conv(val) for (val, conv) in zip(row, conversions)]
             yield dict(zip(header_row, row))
