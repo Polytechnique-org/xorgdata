@@ -194,7 +194,7 @@ def get_export_date_from_filename(file_path):
 
 def load_csv(csv_file_path, fields):
     with open(csv_file_path, 'r', encoding='utf-8') as csv_stream:
-        reader = csv.reader(csv_stream, delimiter='\t', quotechar=None, escapechar='\\', strict=True)
+        reader = csv.reader(csv_stream, delimiter='\t', quotechar='"', escapechar='\\', strict=True)
         header_row = []
         conversions = []
         for row in reader:
