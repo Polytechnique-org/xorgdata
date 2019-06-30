@@ -76,7 +76,7 @@ class Command(BaseCommand):
 
         # Log that the export cas successful
         models.ExportLog.objects.create(
-            date=datetime.now(),
+            date=datetime.datetime.now(),
             export_kind=models.ExportLog.KIND_AUTH,
             error=models.ImportLog.SUCCESS,
             num_items=len(exported_data),
