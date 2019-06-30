@@ -29,6 +29,19 @@ def int_or_none(txt):
         raise ValueError("invalid integer value: {}".format(repr(txt)))
 
 
+def phone_indicator(txt):
+    """A phone indicator is a number identifying a country.
+
+    It may start with +, which is why int_or_none is not used.
+    """
+    if txt == '':
+        return None
+    elif re.match(r'^\+?[0-9]+$', txt):
+        return int(txt)
+    else:
+        raise ValueError("invalid phone indicator value: {}".format(repr(txt)))
+
+
 FRENCH_DATE_RE = re.compile(r'(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})$')
 
 
@@ -110,9 +123,9 @@ ALUMNFORCE_USERJOB_FIELDS = {
     'Adresse professionnelle - Code postal': ('address_postcode', str),
     'Adresse professionnelle - Ville': ('address_city', str),
     'Adresse professionnelle - Pays': ('address_country', str),
-    'Indicateur téléphone fixe professionnel': ('phone_indicator', int_or_none),
+    'Indicateur téléphone fixe professionnel': ('phone_indicator', phone_indicator),
     'Téléphone fixe professionnel': ('phone_number', str),
-    'Indicateur téléphone mobile professionnel': ('mobile_phone_indicator', int_or_none),
+    'Indicateur téléphone mobile professionnel': ('mobile_phone_indicator', phone_indicator),
     'Téléphone mobile professionnel': ('mobile_phone_number', str),
     'Fax professionnel': ('fax', str),
     'Email professionnel': ('email', str),
