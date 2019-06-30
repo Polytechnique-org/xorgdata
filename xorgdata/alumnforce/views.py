@@ -12,7 +12,7 @@ class SummaryView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        """Get the last logs from the database, for each defined kind"""
+        # Get the last import logs from the database, for each defined kind
         last_logs = []
         for kind, _kind_name in models.ImportLog.KNOWN_EXPORT_KINDS:
             qs = models.ImportLog.objects.filter(export_kind=kind).order_by('-date', '-is_incremental')
@@ -20,7 +20,17 @@ class SummaryView(TemplateView):
                 last_logs.append(qs[:1].get())
             except models.ImportLog.DoesNotExist:
                 pass
-        context['last_logs_by_kind'] = last_logs
+        context['last_imp_logs_by_kind'] = last_logs
+
+        # Get the last export logs from the database, for each defined kind
+        last_logs = []
+        for kind, _kind_name in models.ExportLog.KNOWN_KINDS:
+            qs = models.ExportLog.objects.filter(export_kind=kind).order_by('-date')
+            try:
+                last_logs.append(qs[:1].get())
+            except models.ExportLog.DoesNotExist:
+                pass
+        context['last_exp_logs_by_kind'] = last_logs
         return context
 
 

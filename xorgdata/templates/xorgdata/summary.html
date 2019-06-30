@@ -27,6 +27,9 @@ X.org Data synchronization summary
         .xorg-spinner table {
             z-index: 1;
         }
+        td.export-title {
+            text-align: center;
+        }
         td.export-kind {
             font-family: monospace;
             text-align: right;
@@ -143,7 +146,15 @@ X.org Data synchronization summary
                 <img alt="Polytechnique.org" src="{% static 'logo-xorg-for-circle.png' %}">
             </a>
             <table style="width: 100%;">
-            {% for log_obj in last_logs_by_kind %}
+                <tr><td class="export-title" colspan="2">&mdash;&mdash;&nbsp;Import from AX&nbsp;&mdash;&mdash;</td></tr>
+            {% for log_obj in last_imp_logs_by_kind %}
+                <tr>
+                    <td class="export-kind">{{ log_obj.get_export_kind_display }}</td>
+                    <td class="export-result">{{ log_obj.get_error_display }} on {{ log_obj.date|date:"Y-m-d" }}</td>
+                </tr>
+            {% endfor %}
+                <tr><td class="export-title" colspan="2">&mdash;&mdash;&nbsp;Export&nbsp;&mdash;&mdash;</td></tr>
+            {% for log_obj in last_exp_logs_by_kind %}
                 <tr>
                     <td class="export-kind">{{ log_obj.get_export_kind_display }}</td>
                     <td class="export-result">{{ log_obj.get_error_display }} on {{ log_obj.date|date:"Y-m-d" }}</td>
