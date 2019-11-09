@@ -83,6 +83,8 @@ ALUMNFORCE_FIELDS = (
     ('Nom d\'usage', 'usage_name', None),
     ('Civilité (Mme / Mlle / M.)', 'civility', None),
     ('Date de naissance', 'birth_date', None),
+    ('Date de création de compte', 'account_creation_date', None),
+    ('Date de validation des CGU', 'cgu_validation_date', None),
     ('Adresse personnelle - Ligne 1', 'personal.address.line_1', None),
     ('Adresse personnelle - Ligne 2', 'personal.address.line_2', None),
     ('Adresse personnelle - Ligne 3', 'personal.address.line_3', None),
