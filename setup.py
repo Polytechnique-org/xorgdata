@@ -22,7 +22,7 @@ def get_version(package_name):
             match = version_re.match(line[:-1])
             if match:
                 return match.groups()[0]
-    return '0.1.0'
+    return '0.1.1'
 
 PACKAGE = 'xorgdata'
 
