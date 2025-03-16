@@ -124,7 +124,11 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS("Downloading {}".format(filename)))
 
                 dl_filepath = download_dir_path / filename
-                conn.download_file(filename, dl_filepath)
+
+                if dl_filepath.exists():
+                    self.stdout.write(self.style.WARNING("NOT downloading (file exists locally) {}".format(filename)))
+                else:
+                    conn.download_file(filename, dl_filepath)
 
                 # If there was an error, log it and continue
                 if not is_export_ok:
