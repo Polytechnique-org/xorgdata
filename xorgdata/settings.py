@@ -179,7 +179,8 @@ EMAIL_HOST_PASSWORD = config.getstr("email.password")
 EMAIL_USE_TLS = config.getbool("email.tls")
 DEFAULT_FROM_EMAIL = config.getstr("email.default_from_email", "Polytechnique.org <noreply@polytechnique.org>")
 SERVER_EMAIL = config.getstr("email.server_email", "Polytechnique.org <noreply@polytechnique.org>")
-EMAIL_SUBJECT_PREFIX = config.getstr('email.subject_prefix', '[Django xorgdata]') + ' '
+EMAIL_SUBJECT_PREFIX = config.getstr('email.subject_prefix', '[xorgdata]') + ' '
+REPORT_RECIPIENTS =config.getstr('email.report_recipients', '').split(",")
 
 # In development mode, send messages to the console
 if APPMODE == 'dev':

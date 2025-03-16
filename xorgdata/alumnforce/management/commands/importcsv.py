@@ -5,8 +5,11 @@ import csv
 import datetime
 import os.path
 import re
+import hashlib
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.core.mail import send_mail
 
 from xorgdata.alumnforce import models
 
@@ -192,9 +195,73 @@ def get_export_date_from_filename(file_path):
     return None
 
 
-def load_csv(csv_file_path, fields):
-    with open(csv_file_path, 'r', encoding='utf-8') as csv_stream:
-        reader = csv.reader(csv_stream, delimiter='\t', quoting=csv.QUOTE_NONE, escapechar='\\', strict=True)
+def compute_current_problem_file_path(kind, id):
+    id_str = str(id)
+    directory = os.path.join(
+        settings.PERSISTENT_DIRECTORY,
+        "current_problems_by_id",
+        kind)
+    os.makedirs(directory, exist_ok=True)
+    return os.path.join(
+        directory,
+        id_str + ".rej"
+    )
+
+
+def compute_problem_archive_file_path(kind, id, csv_file_path, state, account_str, hash):
+    id_str = str(id)
+    directory = os.path.join(
+        settings.PERSISTENT_DIRECTORY,
+        "problem_archive",
+        kind)
+    os.makedirs(directory, exist_ok=True)
+    return os.path.join(
+        directory,
+        "__".join([
+            id_str,
+            os.path.basename(csv_file_path),
+            state,
+            account_str,
+            hash
+        ]) + ".txt"
+    )
+
+
+# The CSV (actually tab-separated) files we receive from Alumnforce sometimes contain malformed
+# lines.
+
+# Previously, any malformed line would cause this import to fail with an exception, then the
+# whole script to fail the same, no log in https://data.m4x.org/admin/alumnforce/importlog/ .
+# Worse, the next run of this script would try the same file again and never advance to the next
+# file, effectively blocking the whole import process until a developer fixes this.
+
+# We want:
+# - For clarity, whatever the file content, have a log in https://data.m4x.org/admin/alumnforce/importlog/ .
+# - Malformed lines cause explicit log+mail, but do not prevent importing other good lines in the file.
+# - For debugging, at any time the set of currently invalid lines (indexed by the first field AF_ID) is accessible (filesystem + mail)
+# - To keep sync on, malformed lines do not prevent moving on to the next file when available.
+# - When a newer file provides a valid fixed line for any AF_ID, the now obsolete incident is removed from the set of invalid lines.
+# - An archive is kept of lines that caused an issue and line that fixed it.
+
+# To properly record the various cases, we need a hash and an id.
+# Most fields may end up malformed, so the most reliable ID is the first column: AF_ID.
+
+# We need to detect when things are fixed, and record resolution for archival.
+# How do we know things are fixed?
+
+# One valid line for a user in a file is not always enough to consider the ID fixed.
+# It is enough in the case of the 'users' kind. In this cas, the ID is the ID of the line.
+# Other kind, `userdegrees` and `userjobs` require a "later" logic, which is suitable for all kinds.
+# When a user has something changed on their degrees or jobs, all of these have to be transmitted (and they are).
+# We can only consider things fixed *for this user* if all lines *of this user* in the same file are parsed okay.
+# So, we wait for the whole file to be processed and only then we figure out which users are affected.
+# For this reason, load_csv returns a tuple: a parse_report and the value.
+
+def load_csv(kind, csv_file_path, fields):
+    with open(csv_file_path, 'r', encoding='utf-8') as line_stream:
+        all_lines = line_stream.readlines()
+
+        reader = csv.reader(all_lines, delimiter='\t', quoting=csv.QUOTE_NONE, escapechar='\\', strict=True)
         header_row = []
         conversions = []
         for row in reader:
@@ -210,12 +277,60 @@ def load_csv(csv_file_path, fields):
                     "There are columns which are not unique in {}".format(csv_file_path)
                 continue
 
-            assert len(row) == len(header_row), \
-                "The CSV line {} has a different length from the header ({} != {})".format(
-                    reader.line_num, len(row), len(header_row))
-            # convert the values as appropriate
-            row = [conv(val) for (val, conv) in zip(row, conversions)]
-            yield dict(zip(header_row, row))
+            # Reader.line_num is indeed what we need, not a record count,
+            # cf. https://docs.python.org/3/library/csv.html#csv.csvreader.line_num .
+            # Also reader provides 1-based line number, other need zero-based, so subtract one.
+            csv_raw_line_num = reader.line_num - 1
+            csv_raw_line = all_lines[csv_raw_line_num]
+            line_hash = hashlib.sha256(csv_raw_line.encode('utf-8')).hexdigest()
+
+            account_label_for_filename = "unknown"
+            problems = []
+            af_id = None,
+            parse_report = {
+                "problems": problems,
+                "af_id": af_id,
+                "path": os.path.basename(csv_file_path),
+                "header": header_row,
+                "line_num": csv_raw_line_num,
+                "line_hash": line_hash,
+                "line": csv_raw_line,
+                "line_tabs": csv_raw_line.replace('\t', '<TAB>'),
+            }
+            value = None
+            try:
+                assert len(row) == len(header_row), \
+                    f"Line has {len(row)} items but the header has {len(header_row)} items."
+                # convert the values as appropriate
+                row = [conv(val) for (val, conv) in zip(row, conversions)]
+                value = dict(zip(header_row, row))
+                # first item in row is in all cases the AF_ID of an involved user, check this in ALUMNFORCE_*_FIELDS
+                af_id = row[0]
+
+            except (AssertionError, ValueError, KeyError) as exc:
+                problems.append(exc)
+
+                # There was a problem handling this line.
+                # Time to extract what we can from the line.
+
+                try:
+                    # The pattern is to update the parse_report record with the most relevant message in case the next step fails.
+                    # If we're interrupted at any point below, the error record will just
+                    # remain with the last information.
+                    failure = "cannot extract AF_ID"
+                    if '\t' not in csv_raw_line:
+                        failure = "no tab character"
+                        raise Exception("No tab character")
+                    # Alumnforce IDs are currently 5 figures, using 9 leave some room.
+                    af_id_str = csv_raw_line.split('\t')[0][0:9]
+                    af_id = int(af_id_str)
+
+                except Exception as exc2:
+                    problems.append(failure)
+                    problems.append(exc2)
+
+            parse_report['af_id'] = af_id
+            yield (parse_report, value)
 
 
 class Command(BaseCommand):
@@ -227,9 +342,11 @@ class Command(BaseCommand):
         parser.add_argument('csvfile', nargs='+', type=str,
                             help="path to CSV file to load")
 
-    def log_success(self, file_date, file_kind, num_values, file_path):
+    def log_success(self, file_date, file_kind, num_values, file_path, facts):
         """Log a successful import"""
-        message = "Loaded {} values from {} {}".format(num_values, file_kind, repr(file_path))
+        message = "Loaded {} values from {} {}.".format(num_values, file_kind, repr(file_path))
+        for fact in facts:
+            message += f" {fact}."
         if self.verbosity:
             self.stdout.write(self.style.SUCCESS(message))
         models.ImportLog.objects.create(
@@ -256,6 +373,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.verbosity = options['verbosity']
 
+        parse_reports_by_kind = {}
+
+        report_by_file_then_user = []
+
         for file_path in options['csvfile']:
             file_date = get_export_date_from_filename(file_path)
             if not file_date:
@@ -279,9 +400,15 @@ class Command(BaseCommand):
                     "Incompatible kind for file %r: %r != %r" % (
                         file_path, file_kind, options['kind']))
 
+            parse_reports_this_kind = []
+            parse_reports_by_kind[file_kind] = parse_reports_this_kind
+
             if file_kind == "users":
                 num_values = 0
-                for value in load_csv(file_path, ALUMNFORCE_USER_FIELDS):
+                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_USER_FIELDS):
+                    parse_reports_this_kind.append(parse_report)
+                    if not value:
+                        continue
                     value['last_update'] = file_date
                     value['deleted_since'] = None
                     for key in ('nationality', 'nationality_2', 'nationality_3'):
@@ -296,11 +423,13 @@ class Command(BaseCommand):
                         value['profile_picture_url'] = 'https://ax.polytechnique.org' + value['profile_picture_url']
                     models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
                     num_values += 1
-                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "userdegrees":
                 num_values = 0
                 seen_accounts = {}
-                for value in load_csv(file_path, ALUMNFORCE_USERDEGREE_FIELDS):
+                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_USERDEGREE_FIELDS):
+                    parse_reports_this_kind.append(parse_report)
+                    if not value:
+                        continue
                     account = seen_accounts.get(value['af_id'])
                     if account is None:
                         try:
@@ -321,11 +450,13 @@ class Command(BaseCommand):
                     value['last_update'] = file_date
                     account.degrees.create(**value)
                     num_values += 1
-                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "userjobs":
                 num_values = 0
                 seen_accounts = {}
-                for value in load_csv(file_path, ALUMNFORCE_USERJOB_FIELDS):
+                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_USERJOB_FIELDS):
+                    parse_reports_this_kind.append(parse_report)
+                    if not value:
+                        continue
                     account = seen_accounts.get(value['af_id'])
                     if account is None:
                         try:
@@ -346,17 +477,22 @@ class Command(BaseCommand):
                     value['last_update'] = file_date
                     account.jobs.create(**value)
                     num_values += 1
-                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "groups":
                 num_values = 0
-                for value in load_csv(file_path, ALUMNFORCE_GROUP_FIELDS):
+                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_GROUP_FIELDS):
+                    parse_reports_this_kind.append(parse_report)
+                    if not value:
+                        continue
                     value['last_update'] = file_date
                     models.Group.objects.update_or_create(af_id=value['af_id'], defaults=value)
                     num_values += 1
-                self.log_success(file_date, file_kind, num_values, file_path)
             elif file_kind == "groupmembers":
                 num_values = 0
-                for value in load_csv(file_path, ALUMNFORCE_GROUPMEMBER_FIELDS):
+                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_GROUPMEMBER_FIELDS):
+                    parse_reports_this_kind.append(parse_report)
+                    if not value:
+                        continue
+
                     try:
                         account = models.Account.objects.get(af_id=value['user_id'])
                     except models.Account.DoesNotExist:
@@ -389,6 +525,173 @@ class Command(BaseCommand):
                         defaults={'role': role, 'last_update': file_date},
                     )
                     num_values += 1
-                self.log_success(file_date, file_kind, num_values, file_path)
             else:
                 raise CommandError("Unknown kind %r" % file_kind)
+
+            # Here we have finished loaded all lines of one csv file.
+            # Time to update the filesystem-based report.
+
+            # Extract af_id that have problems and gather the matching parse reports
+
+            reports_by_afid = {}
+            for parse_report in parse_reports_this_kind:
+                reports_by_afid.setdefault(parse_report['af_id'], []).append(parse_report)
+
+            # Update records
+
+            problem_changes = {}
+
+            # These are not all users, only users referred to by imported data.
+            for (af_id, reports) in reports_by_afid.items():
+                try:
+                    account = models.Account.objects.get(af_id=af_id)
+                    account_label_for_filename = account.xorg_id
+                    account_label_for_content = repr(account.xorg_id)
+                except models.Account.DoesNotExist:
+                    account_label_for_filename = "unknown"
+                    account_label_for_content = f"pas de compte pour af_id={af_id}"
+
+                current_problem_file_path = compute_current_problem_file_path(file_kind, af_id)
+                user_was_affected = os.path.exists(current_problem_file_path)
+
+                user_reports_with_problem = [r for r in reports if r["problems"]]
+
+                user_is_affected = len(user_reports_with_problem) > 0
+                # any(report["problems"] for report in reports)
+
+                case_number = (user_was_affected << 1) | user_is_affected
+
+                # will allow to summarize affected users and changes
+                problem_changes.setdefault(case_number, []).append(account_label_for_content)
+
+                if user_is_affected:
+                    print(
+                        f"Recording current problem on user {account_label_for_content} with kind {file_kind}: {current_problem_file_path}")
+                    with open(current_problem_file_path, "a") as rej_file:
+                        rej_file.write(
+                            f"### Soucis de type {file_kind} concernant le compte {account_label_for_content}\n")
+                        for report in user_reports_with_problem:
+                            rej_file.write(
+                                "\n------------------------------------------------------------------------\n"
+                                + "\n".join(
+                                    "{:<10}: {}".format(
+                                        k,
+                                        v) for k,
+                                    v in report.items()) +
+                                "\n------------------------------------------------------------------------\n")
+                else:
+                    if user_was_affected:
+                        print(f"Deleting rejection file: {current_problem_file_path}")
+                        try:
+                            os.remove(current_problem_file_path)
+                        except OSError:
+                            pass
+
+                problem_archive_file_marker = [None, "problem_new", "resolved", "problem_still"][case_number]
+
+                if problem_archive_file_marker:
+                    lines_to_log = user_reports_with_problem
+                    if problem_archive_file_marker == "resolved":
+                        # When an issue arises, we know which line(s) is/are bad.
+                        # When the issue is solved, by definition we only have good lines (at least 1,
+                        # on kind "user", there is only one line, but on "jobs" there are typically several).
+                        # For archival we need all those lines. Each will land in a separate file, by line hash.
+                        lines_to_log = reports
+                    for report in lines_to_log:
+                        problem_archive_file_path = compute_problem_archive_file_path(
+                            file_kind, af_id, file_path, problem_archive_file_marker,
+                            account_label_for_filename, report["line_hash"])
+                        print(f"Recording to problem archive: {problem_archive_file_path}")
+                        with open(problem_archive_file_path, "w") as rej_file:
+                            rej_file.write(
+                                "\n------------------------------------------------------------------------\n"
+                                + "\n".join(
+                                    "{:<10}: {}".format(
+                                        k,
+                                        v) for k,
+                                    v in report.items()) +
+                                "\n------------------------------------------------------------------------\n")
+
+            # Here finished importing and processing one file, now reporting
+
+            facts_for_django_logs = []
+
+            for case_number in range(4):
+                users_in_this_case = problem_changes.get(case_number)
+                # print (f"For case {case_number} users: {users_in_this_case}")
+                if users_in_this_case:
+                    case = ["ras", "nouveau souci", "souci résolu",
+                            "souci répété"][case_number]
+                    if case_number == 0:
+                        pass
+                        # report_by_file_then_user.append(f"  {case} pour {len(users_in_this_case)} utilisateur(s):")
+                    else:
+                        for user in users_in_this_case:
+                            facts_for_django_logs.append(f"{case} pour {user}")
+                            report_by_file_then_user.append(f"{os.path.basename(file_path)} : {case} pour {user}")
+
+            self.log_success(file_date, file_kind, num_values, os.path.basename(file_path), facts_for_django_logs)
+            # Here finished importing, processing and reporting one file
+
+        # Here finished importing and processing all files.
+        # We can now prepare a global report.
+
+        # TODO we should catch any exception here (else some case will cause no report again).
+
+        import_report_lines = []
+
+        import_report_lines += [
+            "",
+            "## De quoi s'agit-il ?",
+            "",
+            "Ce message est envoyé par le sous-système qui importe les dernières données d'annuaires depuis l'AX.",
+            "",
+            "## Résumé du traitement",
+            ""
+        ]
+
+        # import_report_lines += [f"Nombre de fichiers à importer : {len(options['csvfile'])}, liste ci-dessous:", ""]
+        import_report_lines += ["Importé " + os.path.basename(n) for n in options['csvfile']]
+        # import_report_lines += [f"Nombre de fichiers à importer : {len(options['csvfile'])}."]
+
+        import_report_lines += report_by_file_then_user
+
+        import_report_lines += [
+            "", "## Synthèse des utilisateurs affectés par des soucis", "",
+            "Cette section ne se limite pas aux nouveautés de la dernière importation.",
+            "Elle considère tous les incidents non encore résolus.", "",
+            "Les erreurs de données manifestes (exemple : tabulation dans un champ, année sur 3 chiffres)",
+            "sont à corriger dans la base en amont. Alors l'entrée correspondante disparaîtra à la prochaine importation.",
+            "",]
+
+        from pathlib import Path
+        rejects_directory = Path(settings.PERSISTENT_DIRECTORY) / "current_problems_by_id"
+
+        active_rejections = [
+            (subdir.name, file.name, file)
+            for subdir in rejects_directory.iterdir() if subdir.is_dir()
+            for file in subdir.iterdir() if file.is_file()
+        ]
+
+        if not active_rejections:
+            import_report_lines.append("**** Aucun incident en cours ! ****")
+        else:
+            import_report_lines += [
+                f"* souci sur les données {kind} pour l'af_id {name.split('.')[0]}"
+                for (kind, name, fullpath) in active_rejections
+            ]
+
+            import_report_lines.append("\n## Détails des utilisateurs affectés")
+
+            for (kind, name, rejfile) in active_rejections:
+                with rejfile.open() as f:
+                    import_report_lines.append("\n" + "".join(f.readlines()))
+
+        email_message_text = "\n".join(import_report_lines)
+
+        send_mail(
+            f"Rapport d'importation : {len(active_rejections)} souci(s)",
+            email_message_text,
+            None,
+            settings.REPORT_RECIPIENTS
+        )
