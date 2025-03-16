@@ -2,3 +2,4 @@
 
 check_manifest
 flake8
+psycopg2
