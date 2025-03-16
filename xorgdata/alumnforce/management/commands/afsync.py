@@ -120,6 +120,12 @@ class Command(BaseCommand):
 
                 file_date = datetime.date(year=int(date_str[:4]), month=int(date_str[4:6]), day=int(date_str[6:]))
 
+                if options['verbose']:
+                    self.stdout.write(self.style.SUCCESS("Downloading {}".format(filename)))
+
+                dl_filepath = download_dir_path / filename
+                conn.download_file(filename, dl_filepath)
+
                 # If there was an error, log it and continue
                 if not is_export_ok:
                     self.stdout.write(self.style.WARNING("AlumnForce export error found: {}".format(repr(filename))))
@@ -137,14 +143,8 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS("(not) applying file {}".format(repr(filename))))
                     continue
 
-                if options['verbose']:
-                    self.stdout.write(self.style.SUCCESS("Downloading {}".format(filename)))
-
                 if not re.match(r'^[-0-9A-Za-z]+\.csv$', filename):
                     raise CommandError("Unexpected bad filename {}".format(repr(filename)))
-
-                dl_filepath = download_dir_path / filename
-                conn.download_file(filename, dl_filepath)
 
                 if options['verbose']:
                     self.stdout.write(self.style.SUCCESS("Applying {}".format(dl_filepath)))
@@ -152,7 +152,7 @@ class Command(BaseCommand):
                 else:
                     call_command('importcsv', dl_filepath, kind=kind, verbosity=0)
 
-                dl_filepath.unlink()
+                #dl_filepath.unlink() # we keep an archive of all files downloaded
 
         if options['push_export']:
             call_command('exportforauth', push=True)
