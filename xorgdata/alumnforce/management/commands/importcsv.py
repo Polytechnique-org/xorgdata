@@ -373,9 +373,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.verbosity = options['verbosity']
 
+        timestamp_start = datetime.datetime.utcnow()
+
+        kinds_involved_in_imported_files = set()
         parse_reports_by_kind = {}
 
         report_by_file_then_user = []
+        problem_changes_all_files = {}
+        resolved_to_be_also_in_report = []
 
         for file_path in options['csvfile']:
             file_date = get_export_date_from_filename(file_path)
@@ -400,6 +405,7 @@ class Command(BaseCommand):
                     "Incompatible kind for file %r: %r != %r" % (
                         file_path, file_kind, options['kind']))
 
+            kinds_involved_in_imported_files.add(file_kind)
             parse_reports_this_kind = []
             parse_reports_by_kind[file_kind] = parse_reports_this_kind
 
@@ -539,7 +545,7 @@ class Command(BaseCommand):
 
             # Update records
 
-            problem_changes = {}
+            problem_changes_this_file = {}
 
             # These are not all users, only users referred to by imported data.
             for (af_id, reports) in reports_by_afid.items():
@@ -562,23 +568,20 @@ class Command(BaseCommand):
                 case_number = (user_was_affected << 1) | user_is_affected
 
                 # will allow to summarize affected users and changes
-                problem_changes.setdefault(case_number, []).append(account_label_for_content)
+                problem_changes_this_file.setdefault(case_number, []).append(account_label_for_content)
+                problem_changes_all_files.setdefault(case_number, []).append(account_label_for_content)
 
                 if user_is_affected:
                     print(
                         f"Recording current problem on user {account_label_for_content} with kind {file_kind}: {current_problem_file_path}")
                     with open(current_problem_file_path, "a") as rej_file:
                         rej_file.write(
-                            f"### Soucis de type {file_kind} concernant le compte {account_label_for_content}\n")
+                            f"### Soucis de type {file_kind} concernant le compte {account_label_for_content}\n\n")
                         for report in user_reports_with_problem:
                             rej_file.write(
-                                "\n------------------------------------------------------------------------\n"
-                                + "\n".join(
-                                    "{:<10}: {}".format(
-                                        k,
-                                        v) for k,
-                                    v in report.items()) +
-                                "\n------------------------------------------------------------------------\n")
+                                "------------------------------------------------------------------------\n"
+                                + "\n".join("{:<10}: {}".format(k, v) for k, v in report.items())
+                                + "------------------------------------------------------------------------\n")
                 else:
                     if user_was_affected:
                         print(f"Deleting rejection file: {current_problem_file_path}")
@@ -602,22 +605,21 @@ class Command(BaseCommand):
                             file_kind, af_id, file_path, problem_archive_file_marker,
                             account_label_for_filename, report["line_hash"])
                         print(f"Recording to problem archive: {problem_archive_file_path}")
+                        if problem_archive_file_marker == "resolved":
+                            resolved_to_be_also_in_report.append(
+                                (account_label_for_filename, problem_archive_file_path))
                         with open(problem_archive_file_path, "w") as rej_file:
                             rej_file.write(
                                 "\n------------------------------------------------------------------------\n"
-                                + "\n".join(
-                                    "{:<10}: {}".format(
-                                        k,
-                                        v) for k,
-                                    v in report.items()) +
-                                "\n------------------------------------------------------------------------\n")
+                                + "\n".join("{:<10}: {}".format(k, v) for k, v in report.items())
+                                + "\n------------------------------------------------------------------------\n")
 
             # Here finished importing and processing one file, now reporting
 
             facts_for_django_logs = []
 
             for case_number in range(4):
-                users_in_this_case = problem_changes.get(case_number)
+                users_in_this_case = problem_changes_this_file.get(case_number)
                 # print (f"For case {case_number} users: {users_in_this_case}")
                 if users_in_this_case:
                     case = ["ras", "nouveau souci", "souci résolu",
@@ -667,11 +669,14 @@ class Command(BaseCommand):
         from pathlib import Path
         rejects_directory = Path(settings.PERSISTENT_DIRECTORY) / "current_problems_by_id"
 
-        active_rejections = [
-            (subdir.name, file.name, file)
-            for subdir in rejects_directory.iterdir() if subdir.is_dir()
-            for file in subdir.iterdir() if file.is_file()
-        ]
+        active_rejections = []
+        for subdir_name in kinds_involved_in_imported_files:
+            subdir = rejects_directory / subdir_name
+            if not subdir.is_dir():
+                continue
+            for file in subdir.iterdir():
+                if file.is_file():
+                    active_rejections.append((subdir.name, file.name, file))
 
         if not active_rejections:
             import_report_lines.append("**** Aucun incident en cours ! ****")
@@ -687,11 +692,72 @@ class Command(BaseCommand):
                 with rejfile.open() as f:
                     import_report_lines.append("\n" + "".join(f.readlines()))
 
-        email_message_text = "\n".join(import_report_lines)
+        if resolved_to_be_also_in_report:
+            import_report_lines += [
+                "", "## Détails des cas résolus", "",
+                "Certaines tables peuvent avoir plusieurs lignes par utilisateur (typiquement userjobs).",
+                "Le cas est résolu quand toutes les lignes sont valides.",
+                "Par simplicité on montre ici toutes les lignes qui concernent l'utilisateur.", ""
+            ]
 
-        send_mail(
-            f"Rapport d'importation : {len(active_rejections)} souci(s)",
-            email_message_text,
-            None,
-            settings.REPORT_RECIPIENTS
+            for (account_label_for_filename, resolved_file_path) in resolved_to_be_also_in_report:
+                import_report_lines.append(f"Camarade {account_label_for_filename}")
+                import_report_lines.append(f"Fichier {resolved_file_path}")
+                with open(resolved_file_path, 'r', encoding='utf-8') as f:
+                    import_report_lines.append("".join(f.readlines()))
+
+        # All report info is gathered. Assemble that into an e-mail body.
+
+        overall_report_text = "\n".join(import_report_lines) + "\n"
+
+        human_labels_for_cases = [None, "nouveau(x)", "résolu(s)", "répété(s)"]
+
+        set_of_affected_user_changes = [f"{human_labels_for_cases[case]} pour {len(affected_users)} camarade(s)"
+                                        for (case, affected_users) in problem_changes_all_files.items() if case != 0
+                                        ]
+
+        set_of_affected_user_changes_text = ", ".join(
+            set_of_affected_user_changes) if set_of_affected_user_changes else "aucun changement"
+
+        one_line_subject = f"Souci(s) d'importation : {set_of_affected_user_changes_text}, bilan {len(active_rejections)}"
+
+        worth_an_email = bool(set_of_affected_user_changes) or bool(active_rejections)
+
+        report_as_text = '\n'.join([
+            "------------------------------------------------------------------------",
+            "Vaut un e-mail ? " + ["non", "oui"][worth_an_email],
+            "------------------------------------------------------------------------",
+            one_line_subject,
+            "------------------------------------------------------------------------",
+            overall_report_text
+        ])
+
+        timestamp_start_str = timestamp_start.strftime("%Yy%mm%dd-%Hh%Mm%S.%fs")
+
+        report_file_name = timestamp_start_str
+
+        if len(options['csvfile']) == 1:
+            report_file_name += "_for_file_" + os.path.basename(options['csvfile'][0])
+
+        report_file_name += ".report.txt"
+
+        directory = os.path.join(
+            settings.PERSISTENT_DIRECTORY,
+            timestamp_start.strftime("reports/%Y")
         )
+        os.makedirs(directory, exist_ok=True)
+
+        report_full_path = os.path.join(directory, report_file_name)
+
+        print("saving report to " + report_full_path)
+
+        with open(report_full_path, "a") as report_file:
+            report_file.write(report_as_text)
+
+        if worth_an_email:
+            send_mail(
+                settings.EMAIL_SUBJECT_PREFIX + one_line_subject,
+                overall_report_text,
+                None,
+                settings.REPORT_RECIPIENTS
+            )
