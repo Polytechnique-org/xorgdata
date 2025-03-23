@@ -94,8 +94,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Connected to ftps://{}".format(settings.ALUMNFORCE_FTP_HOST)))
 
         download_dir_path = Path(settings.ALUMNFORCE_FTP_LOCAL_DIRECTORY)
-        if not is_dryrun:
-            download_dir_path.mkdir(exist_ok=True)
+        download_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Check for updates, for each kind
         for kind, lastup_data in last_update_dates.items():
