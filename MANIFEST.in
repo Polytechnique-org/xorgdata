@@ -1,5 +1,5 @@
 include LICENSE README.rst
-include requirements_dev.txt release.txt
+include requirements_dev.txt release.txt pyproject.toml
 
 graft xorgdata
 
@@ -10,4 +10,4 @@ recursive-include third_party *.po
 
 global-exclude *.py[cod] __pycache__ *.so .*.swp
 
-exclude Makefile example_* manage.py tox.ini .flake8 .travis.yml
+exclude Makefile example_* manage.py tox.ini

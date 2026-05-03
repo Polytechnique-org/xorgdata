@@ -1,6 +1,6 @@
 from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from xorgdata.utils.fields import DottedSlugField, UnboundedCharField
 
@@ -62,7 +62,7 @@ class Account(models.Model):
     address_city = UnboundedCharField(blank=True)
     address_state = UnboundedCharField(blank=True)
     address_country = models.CharField(max_length=2, blank=True)
-    address_npai = models.NullBooleanField()
+    address_npai = models.BooleanField(null=True, blank=True)
     phone_personnal = UnboundedCharField(blank=True)
     phone_mobile = UnboundedCharField(blank=True)
     email_1 = models.EmailField()
@@ -70,12 +70,11 @@ class Account(models.Model):
     nationality = UnboundedCharField(blank=True)
     nationality_2 = UnboundedCharField(blank=True)
     nationality_3 = UnboundedCharField(blank=True)
-    dead = models.NullBooleanField()
+    dead = models.BooleanField(null=True, blank=True)
     deathdate = models.DateField(blank=True, null=True)
     dead_for_france = UnboundedCharField(blank=True)
     user_kind = models.IntegerField()
-    additional_roles = UnboundedCharField(blank=True,
-                                          validators=[validate_comma_separated_integer_list])
+    additional_roles = UnboundedCharField(blank=True, validators=[validate_comma_separated_integer_list])
     xorg_id = DottedSlugField(max_length=255, blank=True, null=True)
     school_id = UnboundedCharField(blank=True)
     admission_path = UnboundedCharField(blank=True)
@@ -99,35 +98,35 @@ class Account(models.Model):
         if self.xorg_id:
             result = self.xorg_id
         elif self.first_name and self.last_name:
-            result = '{} {}'.format(self.first_name, self.last_name)
+            result = "{} {}".format(self.first_name, self.last_name)
         elif self.email_1:
             result = self.email_1
         else:
-            result = '?'
+            result = "?"
 
         # Add the AX ID or the AF ID
         if self.ax_id:
-            result += ' (AX ID {})'.format(self.ax_id)
+            result += " (AX ID {})".format(self.ax_id)
         else:
-            result += ' (AF ID {})'.format(self.af_id)
+            result += " (AF ID {})".format(self.af_id)
         return result
 
     def get_additional_roles(self):
         """Return the additional roles as a list of integers"""
         if not self.additional_roles:
             return []
-        return [int(r) for r in self.additional_roles.split(',')]
+        return [int(r) for r in self.additional_roles.split(",")]
 
     @property
     def alumnforce_profile_url(self):
         """URL on AlumnForce website"""
-        return 'https://ax.polytechnique.org/person/by-id/{:d}'.format(self.af_id)
+        return "https://ax.polytechnique.org/person/by-id/{:d}".format(self.af_id)
 
 
 class AcademicInformation(models.Model):
-    account = models.ForeignKey('Account', related_name='degrees', on_delete=models.CASCADE)
+    account = models.ForeignKey("Account", related_name="degrees", on_delete=models.CASCADE)
     diploma_reference = UnboundedCharField()
-    diplomed = models.NullBooleanField()
+    diplomed = models.BooleanField(null=True, blank=True)
     diplomation_date = models.DateField(blank=True, null=True)
     cycle = UnboundedCharField(blank=True)
     domain = UnboundedCharField(blank=True)
@@ -136,7 +135,7 @@ class AcademicInformation(models.Model):
 
 
 class ProfessionnalInformation(models.Model):
-    account = models.ForeignKey('Account', related_name='jobs', on_delete=models.CASCADE)
+    account = models.ForeignKey("Account", related_name="jobs", on_delete=models.CASCADE)
     title = UnboundedCharField()
     role = UnboundedCharField(blank=True)
     company_name = UnboundedCharField()
@@ -156,9 +155,9 @@ class ProfessionnalInformation(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     contract_kind = UnboundedCharField(blank=True)
-    current = models.NullBooleanField()
-    creator_of_company = models.NullBooleanField()
-    buyer_of_company = models.NullBooleanField()
+    current = models.BooleanField(null=True, blank=True)
+    creator_of_company = models.BooleanField(null=True, blank=True)
+    buyer_of_company = models.BooleanField(null=True, blank=True)
     last_update = models.DateField()
 
 
@@ -177,23 +176,23 @@ class Group(models.Model):
 class GroupMembership(models.Model):
     # Use memership values defined by Alumnforce
     MEMBERSHIP_ROLES = (
-        ('banned', _('banned')),
-        ('invited', _('invited')),
-        ('member', _('member')),
-        ('moderator', _('moderator')),
-        ('onlist', _('on list')),
-        ('responsible', _('responsible')),
-        ('unsubscribed', _('unsubscribed')),
+        ("banned", _("banned")),
+        ("invited", _("invited")),
+        ("member", _("member")),
+        ("moderator", _("moderator")),
+        ("onlist", _("on list")),
+        ("responsible", _("responsible")),
+        ("unsubscribed", _("unsubscribed")),
     )
     # Roles that really mean that the user belongs to the group
-    IN_GROUP_ROLES = frozenset(('member', 'moderator', 'onlist', 'responsible'))
-    account = models.ForeignKey(Account, related_name='group_memberships', on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, related_name='memberships', on_delete=models.CASCADE)
+    IN_GROUP_ROLES = frozenset(("member", "moderator", "onlist", "responsible"))
+    account = models.ForeignKey(Account, related_name="group_memberships", on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name="memberships", on_delete=models.CASCADE)
     role = models.SlugField(choices=MEMBERSHIP_ROLES)
     last_update = models.DateField()
 
     class Meta:
-        unique_together = ('group', 'account')
+        unique_together = ("group", "account")
 
 
 class ImportLog(models.Model):
@@ -201,20 +200,20 @@ class ImportLog(models.Model):
     # parse incoming export files: users need to be first created, then groups,
     # then everything else (that depends on users and/or groups).
     KNOWN_EXPORT_KINDS = (
-        ('users', _('users')),
-        ('groups', _('groups')),
-        ('groupmembers', _('groupmembers')),
-        ('userdegrees', _('userdegrees')),
-        ('userjobs', _('userjobs')),
+        ("users", _("users")),
+        ("groups", _("groups")),
+        ("groupmembers", _("groupmembers")),
+        ("userdegrees", _("userdegrees")),
+        ("userjobs", _("userjobs")),
     )
     # Error code when importing data
     SUCCESS = 0
     ALUMNFORCE_ERROR = 1
     XORG_ERROR = 2
     ERROR_CODES = (
-        (SUCCESS, _('success')),
-        (ALUMNFORCE_ERROR, _('AlumnForce error')),
-        (XORG_ERROR, _('X.org error')),
+        (SUCCESS, _("success")),
+        (ALUMNFORCE_ERROR, _("AlumnForce error")),
+        (XORG_ERROR, _("X.org error")),
     )
     date = models.DateField()
     export_kind = models.SlugField(choices=KNOWN_EXPORT_KINDS)
@@ -225,14 +224,10 @@ class ImportLog(models.Model):
 
 
 class ExportLog(models.Model):
-    KIND_AUTH = 'auth'
-    KNOWN_KINDS = (
-        (KIND_AUTH, _('X.org auth')),
-    )
+    KIND_AUTH = "auth"
+    KNOWN_KINDS = ((KIND_AUTH, _("X.org auth")),)
     SUCCESS = 0
-    ERROR_CODES = (
-        (SUCCESS, _('success')),
-    )
+    ERROR_CODES = ((SUCCESS, _("success")),)
     date = models.DateField()
     export_kind = models.SlugField(choices=KNOWN_KINDS)
     error = models.IntegerField(choices=ERROR_CODES)

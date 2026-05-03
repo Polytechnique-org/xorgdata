@@ -1,8 +1,9 @@
 xorgdata
 ========
 
-.. image:: https://secure.travis-ci.org/Polytechnique-org/xorgdata.png?branch=master
-    :target: http://travis-ci.org/Polytechnique-org/xorgdata/
+.. image:: https://github.com/Polytechnique-org/xorgdata/actions/workflows/ci.yml/badge.svg?branch=master
+   :target: https://github.com/Polytechnique-org/xorgdata/actions/workflows/ci.yml
+   :alt: CI
 
 xorgdata handles the central data store for Polytechnique.org services.
 It pulls data from AX's website and pushes it to Polytechnique.org's services.
@@ -19,7 +20,7 @@ Here are some commands to set up a development environment:
 .. code-block:: sh
 
     # Create a new virtual env
-    pew new xorgdata
+    python -m venv xorgdata
 
     # Install dependencies
     make update

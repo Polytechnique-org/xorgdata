@@ -1,5 +1,13 @@
 -e .
 
-check_manifest
-flake8
-psycopg2
+# Linting (remplace flake8 par ruff, plus rapide)
+ruff>=0.4.0
+
+# Vérification du MANIFEST
+check-manifest>=0.49
+
+# Base de données PostgreSQL
+psycopg2>=2.9
+
+# Tests & couverture
+coverage[toml]>=7.4

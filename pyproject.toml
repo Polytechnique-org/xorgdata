@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xorgdata"
+dynamic = ["version"]
+description = "Polytechnique.org central datastore"
+readme = "README.rst"
+license = { text = "AGPL-3.0" }
+authors = [
+    { name = "Polytechnique.org dev team", email = "devel+xorgdata@staff.polytechnique.org" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "Django~=5.2",
+    "getconf",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Natural Language :: French",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Internet :: WWW/HTTP :: Session",
+    "Topic :: System :: Systems Administration :: Authentication/Directory",
+]
+
+[project.urls]
+Homepage = "https://github.com/Polytechnique-org/xorgdata"
+
+[tool.setuptools.dynamic]
+version = { attr = "xorgdata.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["xorgdata", "xorgdata.*"]
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 119
+target-version = "py311"
+exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = []
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["xorgdata"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
