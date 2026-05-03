@@ -1,11 +1,11 @@
 import collections
 import datetime
 import re
+from io import StringIO
 from pathlib import Path
 
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils.six import StringIO
 
 from xorgdata.alumnforce.models import Account, Group, ImportLog
 
@@ -32,7 +32,7 @@ class ImportCsvTests(TestCase):
             for out_line in out.getvalue().splitlines():
                 # Remove color escape sequences
                 line = out_line.replace("\x1b[32;1m", "").replace("\x1b[0m", "")
-                if re.match(r"^Loaded [0-9]+ values from " + kind + " '.*'$", line):
+                if re.match(r"^Loaded [0-9]+ values from " + kind + r" '.*'\.$", line):
                     continue
                 else:  # pragma: no cover
                     # Display the errors

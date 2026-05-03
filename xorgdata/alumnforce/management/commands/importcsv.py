@@ -222,9 +222,11 @@ def compute_problem_archive_file_path(kind, id, csv_file_path, state, account_st
 # We want:
 # - For clarity, whatever the file content, have a log in https://data.m4x.org/admin/alumnforce/importlog/ .
 # - Malformed lines cause explicit log+mail, but do not prevent importing other good lines in the file.
-# - For debugging, at any time the set of currently invalid lines (indexed by the first field AF_ID) is accessible (filesystem + mail)
+# - For debugging, at any time the set of currently invalid lines (indexed by the first field AF_ID) is accessible
+#   (filesystem + mail)
 # - To keep sync on, malformed lines do not prevent moving on to the next file when available.
-# - When a newer file provides a valid fixed line for any AF_ID, the now obsolete incident is removed from the set of invalid lines.
+# - When a newer file provides a valid fixed line for any AF_ID, the now obsolete incident is removed from the set of
+#   invalid lines.
 # - An archive is kept of lines that caused an issue and line that fixed it.
 
 # To properly record the various cases, we need a hash and an id.
@@ -270,7 +272,6 @@ def load_csv(kind, csv_file_path, fields):
             csv_raw_line = all_lines[csv_raw_line_num]
             line_hash = hashlib.sha256(csv_raw_line.encode("utf-8")).hexdigest()
 
-            account_label_for_filename = "unknown"
             problems = []
             af_id = (None,)
             parse_report = {
@@ -301,7 +302,8 @@ def load_csv(kind, csv_file_path, fields):
                 # Time to extract what we can from the line.
 
                 try:
-                    # The pattern is to update the parse_report record with the most relevant message in case the next step fails.
+                    # The pattern is to update the parse_report record with the most relevant message in case the next
+                    # step fails.
                     # If we're interrupted at any point below, the error record will just
                     # remain with the last information.
                     failure = "cannot extract AF_ID"
@@ -358,7 +360,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.verbosity = options["verbosity"]
 
-        timestamp_start = datetime.datetime.utcnow()
+        timestamp_start = datetime.datetime.now(datetime.UTC)
 
         kinds_involved_in_imported_files = set()
         parse_reports_by_kind = {}
@@ -558,7 +560,8 @@ class Command(BaseCommand):
 
                 if user_is_affected:
                     print(
-                        f"Recording current problem on user {account_label_for_content} with kind {file_kind}: {current_problem_file_path}"
+                        f"Recording current problem on user {account_label_for_content} with kind {file_kind}: "
+                        f"{current_problem_file_path}"
                     )
                     with open(current_problem_file_path, "a") as rej_file:
                         rej_file.write(
@@ -660,7 +663,7 @@ class Command(BaseCommand):
             "Elle considère tous les incidents non encore résolus.",
             "",
             "Les erreurs de données manifestes (exemple : tabulation dans un champ, année sur 3 chiffres)",
-            "sont à corriger dans la base en amont. Alors l'entrée correspondante disparaîtra à la prochaine importation.",
+            "sont à corriger dans la base en amont. Alors l'entrée correspondante disparaîtra à la prochaine importation.",  # noqa: E501
             "",
         ]
 

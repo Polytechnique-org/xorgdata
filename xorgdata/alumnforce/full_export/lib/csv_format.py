@@ -109,18 +109,18 @@ ALUMNFORCE_FIELDS = (
     ("Situation matrimoniale", "marital_status", None),
     ("Membre décédé (Oui [1] / Non [0])", "is_dead", BoolType),
     (
-        "Statut (Non enregistré [0] / En cours d'activation [1] / Compte bloqué [2] / Compte activé [3] / Clé d'activation envoyée [4] / En attente de validation [5] / Ne souhaite pas activer son compte [6] / Compte expiré [8])",
+        "Statut (Non enregistré [0] / En cours d'activation [1] / Compte bloqué [2] / Compte activé [3] / Clé d'activation envoyée [4] / En attente de validation [5] / Ne souhaite pas activer son compte [6] / Compte expiré [8])",  # noqa: E501
         "account_status",
         None,
     ),  # noqa
     ("Compte activé (Oui [1] / Non [0])", "is_activated", BoolType),
     (
-        "Type utilisateur (Diplômé(e) [1] / Personnel de l'association [3] / Élève / étudiant(e) [5] / Visiteur [7] / Membre associé [9] / Veuves/Veufs [10])",
+        "Type utilisateur (Diplômé(e) [1] / Personnel de l'association [3] / Élève / étudiant(e) [5] / Visiteur [7] / Membre associé [9] / Veuves/Veufs [10])",  # noqa: E501
         "user_kind",
         None,
     ),  # noqa
     (
-        "Rôle supplémentaire (Visiteur [1] / Administrateur total [3] / Diplômé [4] / Cotisant [5] / Élève et étudiant [7] / Abonné [17] / Membre associé [19] / Administrateur contenu [21] / Administrateur comptable [22] / Veuves/Veufs [26])",
+        "Rôle supplémentaire (Visiteur [1] / Administrateur total [3] / Diplômé [4] / Cotisant [5] / Élève et étudiant [7] / Abonné [17] / Membre associé [19] / Administrateur contenu [21] / Administrateur comptable [22] / Veuves/Veufs [26])",  # noqa: E501
         "roles",
         CommaListType,
     ),  # noqa
@@ -165,7 +165,7 @@ ALUMNFORCE_FIELDS = (
     ("Salaire réel", "work.company.wage", None),
     ("Tranche de salaire", "work.company.wage_bracket", None),
     (
-        "Je souhaite contribuer à la vie de l'Association: CA, Colloque, PDX, Bal de l'X, Grand Magnan ... (Oui [1] / Non [0])",
+        "Je souhaite contribuer à la vie de l'Association: CA, Colloque, PDX, Bal de l'X, Grand Magnan ... (Oui [1] / Non [0])",  # noqa: E501
         "wish.ax",
         BoolType,
     ),  # noqa
@@ -180,13 +180,13 @@ ALUMNFORCE_FIELDS = (
         BoolType,
     ),  # noqa
     (
-        "Je suis prêt à donner un peu de temps pour aider des camarades, ou familles de camarades, en difficulté via la Caisse de Solidarité (Oui [1] / Non [0])",
+        "Je suis prêt à donner un peu de temps pour aider des camarades, ou familles de camarades, en difficulté via la Caisse de Solidarité (Oui [1] / Non [0])",  # noqa: E501
         "wish.solidarity",
         BoolType,
     ),  # noqa
     ("J'accepte de recevoir les mails de l'Association (Oui [1] / Non [0])", "wish.ax_emails", BoolType),
     (
-        "Je peux intervenir lors d'événements, pour animer un atelier, participer à une table ronde ou donner une conférence (Oui [1] / Non [0])",
+        "Je peux intervenir lors d'événements, pour animer un atelier, participer à une table ronde ou donner une conférence (Oui [1] / Non [0])",  # noqa: E501
         "wish.animate",
         BoolType,
     ),  # noqa
