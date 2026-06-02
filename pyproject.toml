@@ -43,7 +43,7 @@ include = ["xorgdata", "xorgdata.*"]
 # ---------------------------------------------------------------------------
 [tool.ruff]
 line-length = 119
-target-version = "py311"
+target-version = "py312"
 exclude = ["migrations"]
 
 [tool.ruff.lint]
