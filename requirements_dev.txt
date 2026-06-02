@@ -7,7 +7,7 @@ ruff>=0.4.0
 check-manifest>=0.49
 
 # Base de données PostgreSQL
-psycopg2>=2.9
+psycopg>=3.3
 
 # Tests & couverture
 coverage[toml]>=7.4
