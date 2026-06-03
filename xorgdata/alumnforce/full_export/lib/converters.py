@@ -5,7 +5,6 @@ import json
 
 from .csv_format import ALUMNFORCE_FIELDS
 
-
 CSV_TO_JSON_FIELDS = dict((x[0], (x[1], x[2])) for x in ALUMNFORCE_FIELDS)
 assert len(ALUMNFORCE_FIELDS) == len(CSV_TO_JSON_FIELDS)
 
@@ -15,6 +14,7 @@ assert len(ALUMNFORCE_FIELDS) == len(JSON_TO_CSV_FIELDS)
 
 class AlumnForceDataC2J(object):
     """Data extracted from AlumnForce website"""
+
     def __init__(self):
         self.fields = None
         self.content = []
@@ -22,14 +22,14 @@ class AlumnForceDataC2J(object):
     @classmethod
     def import_csv_file(cls, csv_file_path, keep_empty=False):
         """Create AlumnForce data from a CSV file"""
-        with open(csv_file_path, 'r', encoding='iso-8859-15') as csv_stream:
+        with open(csv_file_path, "r", encoding="iso-8859-15") as csv_stream:
             return cls.import_csv_stream(csv_stream, keep_empty)
 
     @classmethod
     def import_csv_stream(cls, csv_file, keep_empty=False):
         """Create AlumnForce data from a CSV stream"""
         data = cls()
-        reader = csv.reader(csv_file, delimiter=',', quotechar='"', escapechar='\\', strict=True)
+        reader = csv.reader(csv_file, delimiter=",", quotechar='"', escapechar="\\", strict=True)
         for row in reader:
             if reader.line_num == 1:
                 data.set_fields_from_csv(row)
@@ -52,13 +52,13 @@ class AlumnForceDataC2J(object):
         """Decode a row of the CSV file"""
         if len(csv_row) != len(self.fields):
             raise ValueError(
-                "CSV row of length %d not the length of fields (%d): %r" % (
-                    len(csv_row), len(self.fields), csv_row))
+                "CSV row of length %d not the length of fields (%d): %r" % (len(csv_row), len(self.fields), csv_row)
+            )
 
         data_row = collections.OrderedDict()
         for field_name_type, value in zip(self.fields.items(), csv_row):
             field_name, field_type = field_name_type
-            if not keep_empty and value == '':
+            if not keep_empty and value == "":
                 continue
 
             # Convert the value to the field type
@@ -72,8 +72,8 @@ class AlumnForceDataC2J(object):
 
             # Decode name parts
             data_directory = data_row
-            while '.' in field_name:
-                dir_name, field_name = field_name.split('.', 1)
+            while "." in field_name:
+                dir_name, field_name = field_name.split(".", 1)
                 if dir_name not in data_directory:
                     data_directory[dir_name] = collections.OrderedDict()
                 data_directory = data_directory[dir_name]
@@ -87,6 +87,7 @@ class AlumnForceDataC2J(object):
 
 class AlumnForceDataJ2C(object):
     """Data extracted from a JSON to produce data importted on AlumnForce website"""
+
     def __init__(self):
         self.fields = set()
         # content is a list of dicts "json field"->value
@@ -95,7 +96,7 @@ class AlumnForceDataJ2C(object):
     @classmethod
     def import_json_file(cls, json_file_path):
         """Create AlumnForce data from a JSON file"""
-        with open(json_file_path, 'r') as json_stream:
+        with open(json_file_path, "r") as json_stream:
             return cls.import_json_stream(json_stream)
 
     @classmethod
@@ -123,7 +124,7 @@ class AlumnForceDataJ2C(object):
                 result.append((fullkey, value))
             elif isinstance(value, dict):
                 # sub-dict
-                result += cls.flatten_json_fields(value, fullkey + '.')
+                result += cls.flatten_json_fields(value, fullkey + ".")
             else:
                 raise ValueError("Unknown json field %r" % fullkey)
         return result
@@ -132,7 +133,7 @@ class AlumnForceDataJ2C(object):
         """Dump all the CSV data"""
         # Sort the fields by their rank in ALUMNFORCE_FIELDS
         columns = sorted(self.fields, key=lambda f: JSON_TO_CSV_FIELDS[f][2])
-        writer = csv.writer(csv_file, delimiter=',', quotechar='"', escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(csv_file, delimiter=",", quotechar='"', escapechar="\\", quoting=csv.QUOTE_MINIMAL)
         writer.writerow((JSON_TO_CSV_FIELDS[f][0] for f in columns))
         for row in self.content:
             writer.writerow(row.get(f) for f in columns)

@@ -2,8 +2,8 @@
 import collections
 import datetime
 import ftplib
-from pathlib import Path
 import re
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
@@ -18,7 +18,7 @@ def get_last_update_by_kind():
     """
     last_update_dates = collections.OrderedDict()
     for kind, _kind_name in models.ImportLog.KNOWN_EXPORT_KINDS:
-        qs = models.ImportLog.objects.filter(export_kind=kind).order_by('-date', '-is_incremental')
+        qs = models.ImportLog.objects.filter(export_kind=kind).order_by("-date", "-is_incremental")
         try:
             last_obj = qs[:1].get()
         except models.ImportLog.DoesNotExist:
@@ -30,6 +30,7 @@ def get_last_update_by_kind():
 
 class FtpConnection:
     """FTP connection to AlumnForce's FTP server"""
+
     def __init__(self):
         # Connect to the FTPS server
         self.ftps = ftplib.FTP_TLS(settings.ALUMNFORCE_FTP_HOST)
@@ -44,7 +45,9 @@ class FtpConnection:
 
     def _dir_callback(self, line):
         """Callback for a dir command of a FTP client"""
-        matches = re.match(r'.* (export([a-z]+)-afbo-Polytechnique-X-([0-9]{4}[0-9]{2}[0-9]{2})\.csv(\.error)?)$', line)
+        matches = re.match(
+            r".* (export([a-z]+)-afbo-Polytechnique-X-([0-9]{4}[0-9]{2}[0-9]{2})\.csv(\.error)?)$", line
+        )
         if not matches:
             # Ignore unknown files
             return
@@ -61,25 +64,29 @@ class FtpConnection:
 
     def download_file(self, filename, out_path):
         """Download a file to the given output path"""
-        with open(out_path, 'wb') as fout:
-            self.ftps.retrbinary('RETR ' + filename, fout.write)
+        with open(out_path, "wb") as fout:
+            self.ftps.retrbinary("RETR " + filename, fout.write)
 
 
 class Command(BaseCommand):
     help = "Synchronise with AlumnForce's FTP server"
 
     def add_arguments(self, parser):
-        parser.add_argument('-n', '--dryrun', action='store_true',
-                            help="show the files that would be applied, without updating anything")
-        parser.add_argument('--verbose', action='store_true',
-                            help="show what is done")
-        parser.add_argument('--push-export', action='store_true',
-                            help="export and and push it to Polytechnique.org's consumers")
+        parser.add_argument(
+            "-n",
+            "--dryrun",
+            action="store_true",
+            help="show the files that would be applied, without updating anything",
+        )
+        parser.add_argument("--verbose", action="store_true", help="show what is done")
+        parser.add_argument(
+            "--push-export", action="store_true", help="export and and push it to Polytechnique.org's consumers"
+        )
 
     def handle(self, *args, **options):
         last_update_dates = get_last_update_by_kind()
 
-        is_dryrun = options['dryrun']
+        is_dryrun = options["dryrun"]
         if is_dryrun:
             self.stdout.write("Dry-run mode, nothing will be committed")
 
@@ -90,7 +97,7 @@ class Command(BaseCommand):
 
         # Connect to the FTPS server
         conn = FtpConnection()
-        if options['verbose']:
+        if options["verbose"]:
             self.stdout.write(self.style.SUCCESS("Connected to ftps://{}".format(settings.ALUMNFORCE_FTP_HOST)))
 
         download_dir_path = Path(settings.ALUMNFORCE_FTP_LOCAL_DIRECTORY)
@@ -102,7 +109,7 @@ class Command(BaseCommand):
                 last_update_date = None
                 last_was_incremental = None
             else:
-                last_update_date = lastup_data[0].strftime('%Y%m%d')
+                last_update_date = lastup_data[0].strftime("%Y%m%d")
                 last_was_incremental = lastup_data[1]
 
             # Apply all possible files, sorting them by date
@@ -119,7 +126,7 @@ class Command(BaseCommand):
 
                 file_date = datetime.date(year=int(date_str[:4]), month=int(date_str[4:6]), day=int(date_str[6:]))
 
-                if options['verbose']:
+                if options["verbose"]:
                     self.stdout.write(self.style.SUCCESS("Downloading {}".format(filename)))
 
                 dl_filepath = download_dir_path / filename
@@ -146,16 +153,16 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS("(not) applying file {}".format(repr(filename))))
                     continue
 
-                if not re.match(r'^[-0-9A-Za-z]+\.csv$', filename):
+                if not re.match(r"^[-0-9A-Za-z]+\.csv$", filename):
                     raise CommandError("Unexpected bad filename {}".format(repr(filename)))
 
-                if options['verbose']:
+                if options["verbose"]:
                     self.stdout.write(self.style.SUCCESS("Applying {}".format(dl_filepath)))
-                    call_command('importcsv', dl_filepath, kind=kind)
+                    call_command("importcsv", dl_filepath, kind=kind)
                 else:
-                    call_command('importcsv', dl_filepath, kind=kind, verbosity=0)
+                    call_command("importcsv", dl_filepath, kind=kind, verbosity=0)
 
-                #dl_filepath.unlink() # we keep an archive of all files downloaded
+                # dl_filepath.unlink() # we keep an archive of all files downloaded
 
-        if options['push_export']:
-            call_command('exportforauth', push=True)
+        if options["push_export"]:
+            call_command("exportforauth", push=True)

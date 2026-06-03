@@ -3,30 +3,30 @@
 
 import csv
 import datetime
+import hashlib
 import os.path
 import re
-import hashlib
 
 from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
 from django.core.mail import send_mail
+from django.core.management.base import BaseCommand, CommandError
 
 from xorgdata.alumnforce import models
 
 
 def bool_or_none(txt):
-    if txt == '':
+    if txt == "":
         return None
-    elif txt in ('0', '1'):
+    elif txt in ("0", "1"):
         return bool(int(txt))
     else:
         raise ValueError("invalid bool value {}".format(repr(txt)))
 
 
 def int_or_none(txt):
-    if txt == '':
+    if txt == "":
         return None
-    elif re.match(r'^[0-9]+$', txt):
+    elif re.match(r"^[0-9]+$", txt):
         return int(txt)
     else:
         raise ValueError("invalid integer value: {}".format(repr(txt)))
@@ -37,15 +37,15 @@ def phone_indicator(txt):
 
     It may start with +, which is why int_or_none is not used.
     """
-    if txt == '':
+    if txt == "":
         return None
-    elif re.match(r'^\+?[0-9]+$', txt):
+    elif re.match(r"^\+?[0-9]+$", txt):
         return int(txt)
     else:
         raise ValueError("invalid phone indicator value: {}".format(repr(txt)))
 
 
-FRENCH_DATE_RE = re.compile(r'(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})$')
+FRENCH_DATE_RE = re.compile(r"(?P<day>\d{1,2})/(?P<month>\d{1,2})/(?P<year>\d{4})$")
 
 
 def parse_french_date(value):
@@ -61,105 +61,105 @@ def parse_french_date(value):
 
 # Mapping from CSV columns to database fields
 ALUMNFORCE_USER_FIELDS = {
-    'Identifiant AF': ('af_id', int),
-    'Identifiant école': ('ax_id', str),
-    'Prénom': ('first_name', str),
-    'Nom d\'état civil': ('last_name', str),
-    'Nom d\'usage': ('common_name', str),
-    'Civilité': ('civility', str),
-    'Date de naissance': ('birthdate', parse_french_date),
-    'Adresse personnelle - Ligne 1': ('address_1', str),
-    'Adresse personnelle - Ligne 2': ('address_2', str),
-    'Adresse personnelle - Ligne 3': ('address_3', str),
-    'Adresse personnelle - Ligne 4': ('address_4', str),
-    'Adresse personnelle - Code Postal': ('address_postcode', str),
-    'Adresse personnelle - Ville': ('address_city', str),
-    'Adresse personnelle - État': ('address_state', str),
-    'Adresse personnelle - Pays': ('address_country', str),
-    'NPAI': ('address_npai', bool_or_none),
-    'Téléphone fixe personnel': ('phone_personnal', str),
-    'Téléphone mobile personnel': ('phone_mobile', str),
-    'Email personnel 1': ('email_1', str),
-    'Email personnel 2': ('email_2', str),
-    'Nationalité': ('nationality', str),
-    'Décédé': ('dead', bool_or_none),
-    'Date de décès': ('deathdate', parse_french_date),
-    'Type d\'utilisateur': ('user_kind', int),
-    'Rôles supplémentaires': ('additional_roles', str),  # comma-separated integers
-    'Login X.org': ('xorg_id', str),
-    'Matricule école': ('school_id', str),
-    'Voie d\'entrée': ('admission_path', str),
-    'Domaine du cursus': ('cursus_domain', str),
-    'Intitulé du cursus': ('cursus_name', str),
-    'Corps actuel': ('corps_current', str),
-    'Corps d\'origine': ('corps_origin', str),
-    'Grade': ('corps_grade', str),
-    'Surnom': ('nickname', str),
-    'Seconde nationalité': ('nationality_2', str),
-    'Troisième nationalité': ('nationality_3', str),
-    'Mort pour la france': ('dead_for_france', str),
-    'Sections sportive à l’X': ('sport_section', str),
-    'Ex-binets': ('binets', str),
-    'Réception courrier': ('mail_reception', str),
-    'Inscription aux newsletters': ('newsletter_inscriptions', str),
-    'URL de la photo de profil': ('profile_picture_url', str),
+    "Identifiant AF": ("af_id", int),
+    "Identifiant école": ("ax_id", str),
+    "Prénom": ("first_name", str),
+    "Nom d'état civil": ("last_name", str),
+    "Nom d'usage": ("common_name", str),
+    "Civilité": ("civility", str),
+    "Date de naissance": ("birthdate", parse_french_date),
+    "Adresse personnelle - Ligne 1": ("address_1", str),
+    "Adresse personnelle - Ligne 2": ("address_2", str),
+    "Adresse personnelle - Ligne 3": ("address_3", str),
+    "Adresse personnelle - Ligne 4": ("address_4", str),
+    "Adresse personnelle - Code Postal": ("address_postcode", str),
+    "Adresse personnelle - Ville": ("address_city", str),
+    "Adresse personnelle - État": ("address_state", str),
+    "Adresse personnelle - Pays": ("address_country", str),
+    "NPAI": ("address_npai", bool_or_none),
+    "Téléphone fixe personnel": ("phone_personnal", str),
+    "Téléphone mobile personnel": ("phone_mobile", str),
+    "Email personnel 1": ("email_1", str),
+    "Email personnel 2": ("email_2", str),
+    "Nationalité": ("nationality", str),
+    "Décédé": ("dead", bool_or_none),
+    "Date de décès": ("deathdate", parse_french_date),
+    "Type d'utilisateur": ("user_kind", int),
+    "Rôles supplémentaires": ("additional_roles", str),  # comma-separated integers
+    "Login X.org": ("xorg_id", str),
+    "Matricule école": ("school_id", str),
+    "Voie d'entrée": ("admission_path", str),
+    "Domaine du cursus": ("cursus_domain", str),
+    "Intitulé du cursus": ("cursus_name", str),
+    "Corps actuel": ("corps_current", str),
+    "Corps d'origine": ("corps_origin", str),
+    "Grade": ("corps_grade", str),
+    "Surnom": ("nickname", str),
+    "Seconde nationalité": ("nationality_2", str),
+    "Troisième nationalité": ("nationality_3", str),
+    "Mort pour la france": ("dead_for_france", str),
+    "Sections sportive à l’X": ("sport_section", str),
+    "Ex-binets": ("binets", str),
+    "Réception courrier": ("mail_reception", str),
+    "Inscription aux newsletters": ("newsletter_inscriptions", str),
+    "URL de la photo de profil": ("profile_picture_url", str),
 }
 ALUMNFORCE_USERDEGREE_FIELDS = {
-    'Identifiant AF': ('af_id', int),
-    'Identifiant école': ('ax_id', str),
-    'Référence du diplôme': ('diploma_reference', str),
-    'A obtenu son diplôme ?': ('diplomed', bool_or_none),
-    'Date d\'obtention du diplôme': ('diplomation_date', parse_french_date),
-    'Mode de formation': ('domain', str),
-    'Cycle': ('name', str),
+    "Identifiant AF": ("af_id", int),
+    "Identifiant école": ("ax_id", str),
+    "Référence du diplôme": ("diploma_reference", str),
+    "A obtenu son diplôme ?": ("diplomed", bool_or_none),
+    "Date d'obtention du diplôme": ("diplomation_date", parse_french_date),
+    "Mode de formation": ("domain", str),
+    "Cycle": ("name", str),
 }
 ALUMNFORCE_USERJOB_FIELDS = {
-    'Identifiant AF': ('af_id', int),
-    'Identifiant école': ('ax_id', str),
-    'Titre du poste': ('title', str),
-    'Fonction dans l\'entreprise': ('role', str),
-    'Nom de l\'entreprise': ('company_name', str),
-    'Adresse professionnelle - Ligne 1': ('address_1', str),
-    'Adresse professionnelle - Ligne 2': ('address_2', str),
-    'Adresse professionnelle - Ligne 3': ('address_3', str),
-    'Adresse professionnelle - Ligne 4': ('address_4', str),
-    'Adresse professionnelle - Code postal': ('address_postcode', str),
-    'Adresse professionnelle - Ville': ('address_city', str),
-    'Adresse professionnelle - Pays': ('address_country', str),
-    'Indicateur téléphone fixe professionnel': ('phone_indicator', phone_indicator),
-    'Téléphone fixe professionnel': ('phone_number', str),
-    'Indicateur téléphone mobile professionnel': ('mobile_phone_indicator', phone_indicator),
-    'Téléphone mobile professionnel': ('mobile_phone_number', str),
-    'Fax professionnel': ('fax', str),
-    'Email professionnel': ('email', str),
-    'Date de début de l\'expérience': ('start_date', parse_french_date),
-    'Date de fin de l\'expérience': ('end_date', parse_french_date),
-    'Type de contrat': ('contract_kind', str),
-    'Poste actuel ?': ('current', bool_or_none),
-    'J\'ai créé cette entreprise ?': ('creator_of_company', bool_or_none),
-    'J\'ai repris cette entreprise ?': ('buyer_of_company', bool_or_none),
+    "Identifiant AF": ("af_id", int),
+    "Identifiant école": ("ax_id", str),
+    "Titre du poste": ("title", str),
+    "Fonction dans l'entreprise": ("role", str),
+    "Nom de l'entreprise": ("company_name", str),
+    "Adresse professionnelle - Ligne 1": ("address_1", str),
+    "Adresse professionnelle - Ligne 2": ("address_2", str),
+    "Adresse professionnelle - Ligne 3": ("address_3", str),
+    "Adresse professionnelle - Ligne 4": ("address_4", str),
+    "Adresse professionnelle - Code postal": ("address_postcode", str),
+    "Adresse professionnelle - Ville": ("address_city", str),
+    "Adresse professionnelle - Pays": ("address_country", str),
+    "Indicateur téléphone fixe professionnel": ("phone_indicator", phone_indicator),
+    "Téléphone fixe professionnel": ("phone_number", str),
+    "Indicateur téléphone mobile professionnel": ("mobile_phone_indicator", phone_indicator),
+    "Téléphone mobile professionnel": ("mobile_phone_number", str),
+    "Fax professionnel": ("fax", str),
+    "Email professionnel": ("email", str),
+    "Date de début de l'expérience": ("start_date", parse_french_date),
+    "Date de fin de l'expérience": ("end_date", parse_french_date),
+    "Type de contrat": ("contract_kind", str),
+    "Poste actuel ?": ("current", bool_or_none),
+    "J'ai créé cette entreprise ?": ("creator_of_company", bool_or_none),
+    "J'ai repris cette entreprise ?": ("buyer_of_company", bool_or_none),
 }
 ALUMNFORCE_GROUP_FIELDS = {
-    'Identifiant AF': ('af_id', int),
-    'Matricule AX': ('ax_id', str),
-    'URL du groupe': ('url', str),
-    'Nom du groupe': ('name', str),
-    'Catégorie du groupe': ('category', str),
+    "Identifiant AF": ("af_id", int),
+    "Matricule AX": ("ax_id", str),
+    "URL du groupe": ("url", str),
+    "Nom du groupe": ("name", str),
+    "Catégorie du groupe": ("category", str),
 }
 ALUMNFORCE_GROUPMEMBER_FIELDS = {
-    'Identifiant AF utilisateur': ('user_id', int),
-    'Matricule AX': ('user_ax_id', str),
-    'Identifiant AF groupe': ('group_id', int),
-    'Rôle dans le groupe': ('role', str),
+    "Identifiant AF utilisateur": ("user_id", int),
+    "Matricule AX": ("user_ax_id", str),
+    "Identifiant AF groupe": ("group_id", int),
+    "Rôle dans le groupe": ("role", str),
 }
 ALUMNFORCE_GROUPMEMBER_ROLES = {
-    'banni': 'banned',
-    'désinscrit': 'unsubscribed',
-    'invité': 'invited',
-    'membre': 'member',
-    'modérateur': 'moderator',
-    'responsable': 'responsible',
-    'sur liste': 'onlist',
+    "banni": "banned",
+    "désinscrit": "unsubscribed",
+    "invité": "invited",
+    "membre": "member",
+    "modérateur": "moderator",
+    "responsable": "responsible",
+    "sur liste": "onlist",
 }
 
 
@@ -173,7 +173,7 @@ def get_export_kind_from_filename(file_path):
     Example of path: downloads/ftp/exportusers-afbo-Polytechnique-X-20190323.csv
     """
     file_name = os.path.basename(file_path)
-    match = re.match(r'^export([a-z]+)-afbo[^.]*\.csv$', file_name)
+    match = re.match(r"^export([a-z]+)-afbo[^.]*\.csv$", file_name)
     if match:
         kind = match.group(1)
         if kind not in KNOWN_EXPORT_KINDS:
@@ -188,7 +188,7 @@ def get_export_date_from_filename(file_path):
     Example of path: downloads/ftp/exportusers-afbo-Polytechnique-X-20190323.csv
     """
     file_name = os.path.basename(file_path)
-    match = re.match(r'.*([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])\.csv$', file_name)
+    match = re.match(r".*([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])\.csv$", file_name)
     if match:
         year, month, day = match.groups()
         return datetime.date(year=int(year), month=int(month), day=int(day))
@@ -197,33 +197,17 @@ def get_export_date_from_filename(file_path):
 
 def compute_current_problem_file_path(kind, id):
     id_str = str(id)
-    directory = os.path.join(
-        settings.PERSISTENT_DIRECTORY,
-        "current_problems_by_id",
-        kind)
+    directory = os.path.join(settings.PERSISTENT_DIRECTORY, "current_problems_by_id", kind)
     os.makedirs(directory, exist_ok=True)
-    return os.path.join(
-        directory,
-        id_str + ".rej"
-    )
+    return os.path.join(directory, id_str + ".rej")
 
 
 def compute_problem_archive_file_path(kind, id, csv_file_path, state, account_str, hash):
     id_str = str(id)
-    directory = os.path.join(
-        settings.PERSISTENT_DIRECTORY,
-        "problem_archive",
-        kind)
+    directory = os.path.join(settings.PERSISTENT_DIRECTORY, "problem_archive", kind)
     os.makedirs(directory, exist_ok=True)
     return os.path.join(
-        directory,
-        "__".join([
-            id_str,
-            os.path.basename(csv_file_path),
-            state,
-            account_str,
-            hash
-        ]) + ".txt"
+        directory, "__".join([id_str, os.path.basename(csv_file_path), state, account_str, hash]) + ".txt"
     )
 
 
@@ -238,9 +222,11 @@ def compute_problem_archive_file_path(kind, id, csv_file_path, state, account_st
 # We want:
 # - For clarity, whatever the file content, have a log in https://data.m4x.org/admin/alumnforce/importlog/ .
 # - Malformed lines cause explicit log+mail, but do not prevent importing other good lines in the file.
-# - For debugging, at any time the set of currently invalid lines (indexed by the first field AF_ID) is accessible (filesystem + mail)
+# - For debugging, at any time the set of currently invalid lines (indexed by the first field AF_ID) is accessible
+#   (filesystem + mail)
 # - To keep sync on, malformed lines do not prevent moving on to the next file when available.
-# - When a newer file provides a valid fixed line for any AF_ID, the now obsolete incident is removed from the set of invalid lines.
+# - When a newer file provides a valid fixed line for any AF_ID, the now obsolete incident is removed from the set of
+#   invalid lines.
 # - An archive is kept of lines that caused an issue and line that fixed it.
 
 # To properly record the various cases, we need a hash and an id.
@@ -257,11 +243,12 @@ def compute_problem_archive_file_path(kind, id, csv_file_path, state, account_st
 # So, we wait for the whole file to be processed and only then we figure out which users are affected.
 # For this reason, load_csv returns a tuple: a parse_report and the value.
 
+
 def load_csv(kind, csv_file_path, fields):
-    with open(csv_file_path, 'r', encoding='utf-8') as line_stream:
+    with open(csv_file_path, "r", encoding="utf-8") as line_stream:
         all_lines = line_stream.readlines()
 
-        reader = csv.reader(all_lines, delimiter='\t', quoting=csv.QUOTE_NONE, escapechar='\\', strict=True)
+        reader = csv.reader(all_lines, delimiter="\t", quoting=csv.QUOTE_NONE, escapechar="\\", strict=True)
         header_row = []
         conversions = []
         for row in reader:
@@ -273,8 +260,9 @@ def load_csv(kind, csv_file_path, fields):
                     conversions.append(fields.get(col_name, col_name)[1])
 
                 # Sanity check
-                assert len(set(header_row)) == len(header_row), \
-                    "There are columns which are not unique in {}".format(csv_file_path)
+                assert len(set(header_row)) == len(header_row), "There are columns which are not unique in {}".format(
+                    csv_file_path
+                )
                 continue
 
             # Reader.line_num is indeed what we need, not a record count,
@@ -282,11 +270,10 @@ def load_csv(kind, csv_file_path, fields):
             # Also reader provides 1-based line number, other need zero-based, so subtract one.
             csv_raw_line_num = reader.line_num - 1
             csv_raw_line = all_lines[csv_raw_line_num]
-            line_hash = hashlib.sha256(csv_raw_line.encode('utf-8')).hexdigest()
+            line_hash = hashlib.sha256(csv_raw_line.encode("utf-8")).hexdigest()
 
-            account_label_for_filename = "unknown"
             problems = []
-            af_id = None,
+            af_id = (None,)
             parse_report = {
                 "problems": problems,
                 "af_id": af_id,
@@ -295,12 +282,13 @@ def load_csv(kind, csv_file_path, fields):
                 "line_num": csv_raw_line_num,
                 "line_hash": line_hash,
                 "line": csv_raw_line,
-                "line_tabs": csv_raw_line.replace('\t', '<TAB>'),
+                "line_tabs": csv_raw_line.replace("\t", "<TAB>"),
             }
             value = None
             try:
-                assert len(row) == len(header_row), \
+                assert len(row) == len(header_row), (
                     f"Line has {len(row)} items but the header has {len(header_row)} items."
+                )
                 # convert the values as appropriate
                 row = [conv(val) for (val, conv) in zip(row, conversions)]
                 value = dict(zip(header_row, row))
@@ -314,22 +302,23 @@ def load_csv(kind, csv_file_path, fields):
                 # Time to extract what we can from the line.
 
                 try:
-                    # The pattern is to update the parse_report record with the most relevant message in case the next step fails.
+                    # The pattern is to update the parse_report record with the most relevant message in case the next
+                    # step fails.
                     # If we're interrupted at any point below, the error record will just
                     # remain with the last information.
                     failure = "cannot extract AF_ID"
-                    if '\t' not in csv_raw_line:
+                    if "\t" not in csv_raw_line:
                         failure = "no tab character"
                         raise Exception("No tab character")
                     # Alumnforce IDs are currently 5 figures, using 9 leave some room.
-                    af_id_str = csv_raw_line.split('\t')[0][0:9]
+                    af_id_str = csv_raw_line.split("\t")[0][0:9]
                     af_id = int(af_id_str)
 
                 except Exception as exc2:
                     problems.append(failure)
                     problems.append(exc2)
 
-            parse_report['af_id'] = af_id
+            parse_report["af_id"] = af_id
             yield (parse_report, value)
 
 
@@ -337,10 +326,8 @@ class Command(BaseCommand):
     help = "Import a CSV file with accounts data into the database"
 
     def add_arguments(self, parser):
-        parser.add_argument('-k', '--kind', type=str, choices=KNOWN_EXPORT_KINDS,
-                            help="Kind of csv filed to load")
-        parser.add_argument('csvfile', nargs='+', type=str,
-                            help="path to CSV file to load")
+        parser.add_argument("-k", "--kind", type=str, choices=KNOWN_EXPORT_KINDS, help="Kind of csv filed to load")
+        parser.add_argument("csvfile", nargs="+", type=str, help="path to CSV file to load")
 
     def log_success(self, file_date, file_kind, num_values, file_path, facts):
         """Log a successful import"""
@@ -371,9 +358,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.verbosity = options['verbosity']
+        self.verbosity = options["verbosity"]
 
-        timestamp_start = datetime.datetime.utcnow()
+        timestamp_start = datetime.datetime.now(datetime.UTC)
 
         kinds_involved_in_imported_files = set()
         parse_reports_by_kind = {}
@@ -382,7 +369,7 @@ class Command(BaseCommand):
         problem_changes_all_files = {}
         resolved_to_be_also_in_report = []
 
-        for file_path in options['csvfile']:
+        for file_path in options["csvfile"]:
             file_date = get_export_date_from_filename(file_path)
             if not file_date:
                 raise CommandError("Unable to find a date in file path %r" % file_path)
@@ -391,19 +378,16 @@ class Command(BaseCommand):
                 file_kind = get_export_kind_from_filename(file_path)
             except ValueError as exc:
                 # Forward the exception if there is no default value
-                if not options['kind']:
+                if not options["kind"]:
                     raise CommandError(str(exc))
                 file_kind = None
 
             if not file_kind:
-                if not options['kind']:
-                    raise CommandError(
-                        "Unable to find the kind of %r, use --kind option" % file_path)
-                file_kind = options['kind']
-            elif options['kind'] and file_kind != options['kind']:
-                raise CommandError(
-                    "Incompatible kind for file %r: %r != %r" % (
-                        file_path, file_kind, options['kind']))
+                if not options["kind"]:
+                    raise CommandError("Unable to find the kind of %r, use --kind option" % file_path)
+                file_kind = options["kind"]
+            elif options["kind"] and file_kind != options["kind"]:
+                raise CommandError("Incompatible kind for file %r: %r != %r" % (file_path, file_kind, options["kind"]))
 
             kinds_involved_in_imported_files.add(file_kind)
             parse_reports_this_kind = []
@@ -411,124 +395,127 @@ class Command(BaseCommand):
 
             if file_kind == "users":
                 num_values = 0
-                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_USER_FIELDS):
+                for parse_report, value in load_csv(file_kind, file_path, ALUMNFORCE_USER_FIELDS):
                     parse_reports_this_kind.append(parse_report)
                     if not value:
                         continue
-                    value['last_update'] = file_date
-                    value['deleted_since'] = None
-                    for key in ('nationality', 'nationality_2', 'nationality_3'):
+                    value["last_update"] = file_date
+                    value["deleted_since"] = None
+                    for key in ("nationality", "nationality_2", "nationality_3"):
                         # Make an unfilled field blank
-                        if value[key] == 'Non renseigné':
-                            value[key] = ''
-                    if value['school_id'] == '0':
-                        value['school_id'] = ''
-                    if value['xorg_id'] == '':
-                        value['xorg_id'] = None
-                    if value['profile_picture_url'].startswith('/'):
-                        value['profile_picture_url'] = 'https://ax.polytechnique.org' + value['profile_picture_url']
-                    models.Account.objects.update_or_create(af_id=value['af_id'], defaults=value)
+                        if value[key] == "Non renseigné":
+                            value[key] = ""
+                    if value["school_id"] == "0":
+                        value["school_id"] = ""
+                    if value["xorg_id"] == "":
+                        value["xorg_id"] = None
+                    if value["profile_picture_url"].startswith("/"):
+                        value["profile_picture_url"] = "https://ax.polytechnique.org" + value["profile_picture_url"]
+                    models.Account.objects.update_or_create(af_id=value["af_id"], defaults=value)
                     num_values += 1
             elif file_kind == "userdegrees":
                 num_values = 0
                 seen_accounts = {}
-                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_USERDEGREE_FIELDS):
+                for parse_report, value in load_csv(file_kind, file_path, ALUMNFORCE_USERDEGREE_FIELDS):
                     parse_reports_this_kind.append(parse_report)
                     if not value:
                         continue
-                    account = seen_accounts.get(value['af_id'])
+                    account = seen_accounts.get(value["af_id"])
                     if account is None:
                         try:
-                            account = models.Account.objects.get(af_id=value['af_id'])
+                            account = models.Account.objects.get(af_id=value["af_id"])
                         except models.Account.DoesNotExist:
                             self.log_warning(
-                                file_date, file_kind,
+                                file_date,
+                                file_kind,
                                 "Unable to find user with AF ID {} (AX ID {})".format(
-                                    value['af_id'], repr(value['ax_id'])
-                                ))
+                                    value["af_id"], repr(value["ax_id"])
+                                ),
+                            )
                             continue
-                        seen_accounts[value['af_id']] = account
+                        seen_accounts[value["af_id"]] = account
                         # Remove previous degrees when an account is seen for the first time
                         account.degrees.all().delete()
                     # Insert a degree
-                    del value['af_id']
-                    del value['ax_id']
-                    value['last_update'] = file_date
+                    del value["af_id"]
+                    del value["ax_id"]
+                    value["last_update"] = file_date
                     account.degrees.create(**value)
                     num_values += 1
             elif file_kind == "userjobs":
                 num_values = 0
                 seen_accounts = {}
-                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_USERJOB_FIELDS):
+                for parse_report, value in load_csv(file_kind, file_path, ALUMNFORCE_USERJOB_FIELDS):
                     parse_reports_this_kind.append(parse_report)
                     if not value:
                         continue
-                    account = seen_accounts.get(value['af_id'])
+                    account = seen_accounts.get(value["af_id"])
                     if account is None:
                         try:
-                            account = models.Account.objects.get(af_id=value['af_id'])
+                            account = models.Account.objects.get(af_id=value["af_id"])
                         except models.Account.DoesNotExist:
                             self.log_warning(
-                                file_date, file_kind,
+                                file_date,
+                                file_kind,
                                 "Unable to find user with AF ID {} (AX ID {})".format(
-                                    value['af_id'], repr(value['ax_id'])
-                                ))
+                                    value["af_id"], repr(value["ax_id"])
+                                ),
+                            )
                             continue
-                        seen_accounts[value['af_id']] = account
+                        seen_accounts[value["af_id"]] = account
                         # Remove previous jobs when an account is seen for the first time
                         account.jobs.all().delete()
                     # Insert a job
-                    del value['af_id']
-                    del value['ax_id']
-                    value['last_update'] = file_date
+                    del value["af_id"]
+                    del value["ax_id"]
+                    value["last_update"] = file_date
                     account.jobs.create(**value)
                     num_values += 1
             elif file_kind == "groups":
                 num_values = 0
-                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_GROUP_FIELDS):
+                for parse_report, value in load_csv(file_kind, file_path, ALUMNFORCE_GROUP_FIELDS):
                     parse_reports_this_kind.append(parse_report)
                     if not value:
                         continue
-                    value['last_update'] = file_date
-                    models.Group.objects.update_or_create(af_id=value['af_id'], defaults=value)
+                    value["last_update"] = file_date
+                    models.Group.objects.update_or_create(af_id=value["af_id"], defaults=value)
                     num_values += 1
             elif file_kind == "groupmembers":
                 num_values = 0
-                for (parse_report, value) in load_csv(file_kind, file_path, ALUMNFORCE_GROUPMEMBER_FIELDS):
+                for parse_report, value in load_csv(file_kind, file_path, ALUMNFORCE_GROUPMEMBER_FIELDS):
                     parse_reports_this_kind.append(parse_report)
                     if not value:
                         continue
 
                     try:
-                        account = models.Account.objects.get(af_id=value['user_id'])
+                        account = models.Account.objects.get(af_id=value["user_id"])
                     except models.Account.DoesNotExist:
                         self.log_warning(
-                            file_date, file_kind,
+                            file_date,
+                            file_kind,
                             "Unable to find user with AF ID {} (AX ID {})".format(
-                                value['user_id'], repr(value['user_ax_id'])
-                            ))
+                                value["user_id"], repr(value["user_ax_id"])
+                            ),
+                        )
                         continue
                     try:
-                        group = models.Group.objects.get(af_id=value['group_id'])
+                        group = models.Group.objects.get(af_id=value["group_id"])
                     except models.Group.DoesNotExist:
                         self.log_warning(
-                            file_date, file_kind,
-                            "Unable to find group with AF ID {}".format(
-                                value['group_id']
-                            ))
+                            file_date, file_kind, "Unable to find group with AF ID {}".format(value["group_id"])
+                        )
                         continue
                     try:
-                        role = ALUMNFORCE_GROUPMEMBER_ROLES[value['role']]
+                        role = ALUMNFORCE_GROUPMEMBER_ROLES[value["role"]]
                     except KeyError:
                         self.log_warning(
-                            file_date, file_kind,
-                            "Unable to find group role {}".format(repr(value['role']))
+                            file_date, file_kind, "Unable to find group role {}".format(repr(value["role"]))
                         )
                         continue
                     models.GroupMembership.objects.update_or_create(
                         account=account,
                         group=group,
-                        defaults={'role': role, 'last_update': file_date},
+                        defaults={"role": role, "last_update": file_date},
                     )
                     num_values += 1
             else:
@@ -541,14 +528,14 @@ class Command(BaseCommand):
 
             reports_by_afid = {}
             for parse_report in parse_reports_this_kind:
-                reports_by_afid.setdefault(parse_report['af_id'], []).append(parse_report)
+                reports_by_afid.setdefault(parse_report["af_id"], []).append(parse_report)
 
             # Update records
 
             problem_changes_this_file = {}
 
             # These are not all users, only users referred to by imported data.
-            for (af_id, reports) in reports_by_afid.items():
+            for af_id, reports in reports_by_afid.items():
                 try:
                     account = models.Account.objects.get(af_id=af_id)
                     account_label_for_filename = account.xorg_id
@@ -573,15 +560,19 @@ class Command(BaseCommand):
 
                 if user_is_affected:
                     print(
-                        f"Recording current problem on user {account_label_for_content} with kind {file_kind}: {current_problem_file_path}")
+                        f"Recording current problem on user {account_label_for_content} with kind {file_kind}: "
+                        f"{current_problem_file_path}"
+                    )
                     with open(current_problem_file_path, "a") as rej_file:
                         rej_file.write(
-                            f"### Soucis de type {file_kind} concernant le compte {account_label_for_content}\n\n")
+                            f"### Soucis de type {file_kind} concernant le compte {account_label_for_content}\n\n"
+                        )
                         for report in user_reports_with_problem:
                             rej_file.write(
                                 "------------------------------------------------------------------------\n"
                                 + "\n".join("{:<10}: {}".format(k, v) for k, v in report.items())
-                                + "------------------------------------------------------------------------\n")
+                                + "------------------------------------------------------------------------\n"
+                            )
                 else:
                     if user_was_affected:
                         print(f"Deleting rejection file: {current_problem_file_path}")
@@ -602,17 +593,24 @@ class Command(BaseCommand):
                         lines_to_log = reports
                     for report in lines_to_log:
                         problem_archive_file_path = compute_problem_archive_file_path(
-                            file_kind, af_id, file_path, problem_archive_file_marker,
-                            account_label_for_filename, report["line_hash"])
+                            file_kind,
+                            af_id,
+                            file_path,
+                            problem_archive_file_marker,
+                            account_label_for_filename,
+                            report["line_hash"],
+                        )
                         print(f"Recording to problem archive: {problem_archive_file_path}")
                         if problem_archive_file_marker == "resolved":
                             resolved_to_be_also_in_report.append(
-                                (account_label_for_filename, problem_archive_file_path))
+                                (account_label_for_filename, problem_archive_file_path)
+                            )
                         with open(problem_archive_file_path, "w") as rej_file:
                             rej_file.write(
                                 "\n------------------------------------------------------------------------\n"
                                 + "\n".join("{:<10}: {}".format(k, v) for k, v in report.items())
-                                + "\n------------------------------------------------------------------------\n")
+                                + "\n------------------------------------------------------------------------\n"
+                            )
 
             # Here finished importing and processing one file, now reporting
 
@@ -622,8 +620,7 @@ class Command(BaseCommand):
                 users_in_this_case = problem_changes_this_file.get(case_number)
                 # print (f"For case {case_number} users: {users_in_this_case}")
                 if users_in_this_case:
-                    case = ["ras", "nouveau souci", "souci résolu",
-                            "souci répété"][case_number]
+                    case = ["ras", "nouveau souci", "souci résolu", "souci répété"][case_number]
                     if case_number == 0:
                         pass
                         # report_by_file_then_user.append(f"  {case} pour {len(users_in_this_case)} utilisateur(s):")
@@ -649,24 +646,29 @@ class Command(BaseCommand):
             "Ce message est envoyé par le sous-système qui importe les dernières données d'annuaires depuis l'AX.",
             "",
             "## Résumé du traitement",
-            ""
+            "",
         ]
 
         # import_report_lines += [f"Nombre de fichiers à importer : {len(options['csvfile'])}, liste ci-dessous:", ""]
-        import_report_lines += ["Importé " + os.path.basename(n) for n in options['csvfile']]
+        import_report_lines += ["Importé " + os.path.basename(n) for n in options["csvfile"]]
         # import_report_lines += [f"Nombre de fichiers à importer : {len(options['csvfile'])}."]
 
         import_report_lines += report_by_file_then_user
 
         import_report_lines += [
-            "", "## Synthèse des utilisateurs affectés par des soucis", "",
+            "",
+            "## Synthèse des utilisateurs affectés par des soucis",
+            "",
             "Cette section ne se limite pas aux nouveautés de la dernière importation.",
-            "Elle considère tous les incidents non encore résolus.", "",
+            "Elle considère tous les incidents non encore résolus.",
+            "",
             "Les erreurs de données manifestes (exemple : tabulation dans un champ, année sur 3 chiffres)",
-            "sont à corriger dans la base en amont. Alors l'entrée correspondante disparaîtra à la prochaine importation.",
-            "",]
+            "sont à corriger dans la base en amont. Alors l'entrée correspondante disparaîtra à la prochaine importation.",  # noqa: E501
+            "",
+        ]
 
         from pathlib import Path
+
         rejects_directory = Path(settings.PERSISTENT_DIRECTORY) / "current_problems_by_id"
 
         active_rejections = []
@@ -688,22 +690,25 @@ class Command(BaseCommand):
 
             import_report_lines.append("\n## Détails des utilisateurs affectés")
 
-            for (kind, name, rejfile) in active_rejections:
+            for kind, name, rejfile in active_rejections:
                 with rejfile.open() as f:
                     import_report_lines.append("\n" + "".join(f.readlines()))
 
         if resolved_to_be_also_in_report:
             import_report_lines += [
-                "", "## Détails des cas résolus", "",
+                "",
+                "## Détails des cas résolus",
+                "",
                 "Certaines tables peuvent avoir plusieurs lignes par utilisateur (typiquement userjobs).",
                 "Le cas est résolu quand toutes les lignes sont valides.",
-                "Par simplicité on montre ici toutes les lignes qui concernent l'utilisateur.", ""
+                "Par simplicité on montre ici toutes les lignes qui concernent l'utilisateur.",
+                "",
             ]
 
-            for (account_label_for_filename, resolved_file_path) in resolved_to_be_also_in_report:
+            for account_label_for_filename, resolved_file_path in resolved_to_be_also_in_report:
                 import_report_lines.append(f"Camarade {account_label_for_filename}")
                 import_report_lines.append(f"Fichier {resolved_file_path}")
-                with open(resolved_file_path, 'r', encoding='utf-8') as f:
+                with open(resolved_file_path, "r", encoding="utf-8") as f:
                     import_report_lines.append("".join(f.readlines()))
 
         # All report info is gathered. Assemble that into an e-mail body.
@@ -712,39 +717,43 @@ class Command(BaseCommand):
 
         human_labels_for_cases = [None, "nouveau(x)", "résolu(s)", "répété(s)"]
 
-        set_of_affected_user_changes = [f"{human_labels_for_cases[case]} pour {len(affected_users)} camarade(s)"
-                                        for (case, affected_users) in problem_changes_all_files.items() if case != 0
-                                        ]
+        set_of_affected_user_changes = [
+            f"{human_labels_for_cases[case]} pour {len(affected_users)} camarade(s)"
+            for (case, affected_users) in problem_changes_all_files.items()
+            if case != 0
+        ]
 
-        set_of_affected_user_changes_text = ", ".join(
-            set_of_affected_user_changes) if set_of_affected_user_changes else "aucun changement"
+        set_of_affected_user_changes_text = (
+            ", ".join(set_of_affected_user_changes) if set_of_affected_user_changes else "aucun changement"
+        )
 
-        one_line_subject = f"Souci(s) d'importation : {set_of_affected_user_changes_text}, bilan {len(active_rejections)}"
+        one_line_subject = (
+            f"Souci(s) d'importation : {set_of_affected_user_changes_text}, bilan {len(active_rejections)}"
+        )
 
         worth_an_email = bool(set_of_affected_user_changes) or bool(active_rejections)
 
-        report_as_text = '\n'.join([
-            "------------------------------------------------------------------------",
-            "Vaut un e-mail ? " + ["non", "oui"][worth_an_email],
-            "------------------------------------------------------------------------",
-            one_line_subject,
-            "------------------------------------------------------------------------",
-            overall_report_text
-        ])
+        report_as_text = "\n".join(
+            [
+                "------------------------------------------------------------------------",
+                "Vaut un e-mail ? " + ["non", "oui"][worth_an_email],
+                "------------------------------------------------------------------------",
+                one_line_subject,
+                "------------------------------------------------------------------------",
+                overall_report_text,
+            ]
+        )
 
         timestamp_start_str = timestamp_start.strftime("%Yy%mm%dd-%Hh%Mm%S.%fs")
 
         report_file_name = timestamp_start_str
 
-        if len(options['csvfile']) == 1:
-            report_file_name += "_for_file_" + os.path.basename(options['csvfile'][0])
+        if len(options["csvfile"]) == 1:
+            report_file_name += "_for_file_" + os.path.basename(options["csvfile"][0])
 
         report_file_name += ".report.txt"
 
-        directory = os.path.join(
-            settings.PERSISTENT_DIRECTORY,
-            timestamp_start.strftime("reports/%Y")
-        )
+        directory = os.path.join(settings.PERSISTENT_DIRECTORY, timestamp_start.strftime("reports/%Y"))
         os.makedirs(directory, exist_ok=True)
 
         report_full_path = os.path.join(directory, report_file_name)
@@ -756,8 +765,5 @@ class Command(BaseCommand):
 
         if worth_an_email:
             send_mail(
-                settings.EMAIL_SUBJECT_PREFIX + one_line_subject,
-                overall_report_text,
-                None,
-                settings.REPORT_RECIPIENTS
+                settings.EMAIL_SUBJECT_PREFIX + one_line_subject, overall_report_text, None, settings.REPORT_RECIPIENTS
             )

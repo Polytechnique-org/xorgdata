@@ -6,6 +6,7 @@
 
 # Dev-related files
 dev/
+/.ruff_cache/
 /static/
 /.tox/
 
