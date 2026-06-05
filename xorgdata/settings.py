@@ -95,7 +95,7 @@ WSGI_APPLICATION = "xorgdata.wsgi.application"
 _ENGINE_MAP = {
     "sqlite": "django.db.backends.sqlite3",
     "mysql": "django.db.backends.mysql",
-    "postgresql": "django.db.backends.postgresql_psycopg2",
+    "postgresql": "django.db.backends.postgresql",
 }
 _engine = config.getstr("db.engine", "sqlite")
 if _engine not in _ENGINE_MAP:
